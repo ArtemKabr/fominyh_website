@@ -1,30 +1,34 @@
-# backend/app/core/database.py — подключение к PostgreSQL
+# backend/app/core/database.py — подключение БД и Base
+from typing import AsyncGenerator
 
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-
-from app.core.config import settings
-
-
-DATABASE_URL = (
-    f"postgresql+asyncpg://{settings.DB_USER}:"
-    f"{settings.DB_PASSWORD}@{settings.DB_HOST}:"
-    f"{settings.DB_PORT}/{settings.DB_NAME}"
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    create_async_engine,
 )
+from sqlalchemy.orm import sessionmaker, DeclarativeBase
 
-engine: AsyncEngine = create_async_engine(
+from app.core.settings import settings
+
+
+class Base(DeclarativeBase):
+    """Базовый класс для всех моделей."""  # (я добавил)
+
+
+DATABASE_URL = settings.database_url  # (я добавил)
+
+engine = create_async_engine(
     DATABASE_URL,
-    echo=settings.DEBUG,
+    echo=False,
 )
 
-AsyncSessionLocal = sessionmaker(
-    bind=engine,
+async_session_maker = sessionmaker(
+    engine,
     class_=AsyncSession,
     expire_on_commit=False,
 )
 
 
-async def get_db() -> AsyncSession:
-    """Зависимость FastAPI для получения сессии БД."""
-    async with AsyncSessionLocal() as session:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Получение сессии БД."""  # (я добавил)
+    async with async_session_maker() as session:
         yield session

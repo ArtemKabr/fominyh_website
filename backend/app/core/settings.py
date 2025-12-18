@@ -1,29 +1,33 @@
 # backend/app/core/settings.py — настройки приложения
-
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    """Настройки backend-приложения."""
+    """Настройки приложения."""
 
-    APP_NAME: str = "FOMINYH_WEBSITE"
-    DEBUG: bool = True
+    # App
+    app_name: str = "FOMINYH WEBSITE"
+    debug: bool = False
 
-    # PostgreSQL
-    DB_HOST: str = "localhost"
-    DB_PORT: int = 5432
-    DB_NAME: str = "fominyh_db"
-    DB_USER: str = "postgres"
-    DB_PASSWORD: str = "postgres"
+    # Database
+    db_host: str
+    db_port: int
+    db_name: str
+    db_user: str
+    db_password: str
 
-    # Security
-    SECRET_KEY: str = "change_me"
+    @property
+    def database_url(self) -> str:
+        """URL подключения к PostgreSQL (async)."""
+        return (
+            f"postgresql+asyncpg://"
+            f"{self.db_user}:{self.db_password}"
+            f"@{self.db_host}:{self.db_port}/{self.db_name}"
+        )
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-    )
+    class Config:
+        env_file = ".env"
+        extra = "ignore"
 
 
-# ❗ ОБЯЗАТЕЛЬНО: экземпляр настроек
-settings = Settings()  # (я добавил)
+settings = Settings()
