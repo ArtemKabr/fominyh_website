@@ -1,7 +1,8 @@
 # backend/app/models/__init__.py — регистрация моделей
 
-from app.models.user import User  # (я добавил)
-from app.models.service import Service  # (я добавил)
-from app.models.booking import Booking  # (я добавил)
+from .user import User  # noqa
+from .service import Service  # noqa
+from .booking import Booking  # noqa
+
 
 __all__ = ["User", "Service", "Booking"]

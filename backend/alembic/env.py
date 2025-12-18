@@ -9,6 +9,7 @@ from alembic import context
 
 from app.core.database import Base  # (я добавил)
 from app.core.settings import settings  # (я добавил)
+import app.models
 
 config = context.config
 
