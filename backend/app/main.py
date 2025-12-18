@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 
-app = FastAPI(title="FOMINYH_WEBSITE")
+from app.core.config import settings
+from app.core.database import engine
+
+app = FastAPI(title=settings.APP_NAME)
+
 
 @app.get("/health")
 def health():
