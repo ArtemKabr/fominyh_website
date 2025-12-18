@@ -1,0 +1,95 @@
+# ================================
+# Python / FastAPI
+# ================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Poetry
+poetry.lock
+.cache/
+*.egg-info/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# ================================
+# Tests / coverage
+# ================================
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ================================
+# Logs
+# ================================
+*.log
+logs/
+log/
+
+# ================================
+# Frontend (React / Vite)
+# ================================
+node_modules/
+dist/
+build/
+.vite/
+.eslintcache
+
+# ================================
+# Docker
+# ================================
+*.pid
+docker-compose.override.yml
+
+# ================================
+# IDE / Editors
+# ================================
+.idea/
+.vscode/
+*.iml
+
+# ================================
+# OS files
+# ================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ================================
+# CI / local secrets
+# ================================
+*.pem
+*.key
+*.crt
+*.secret
+
+# ================================
+# Database dumps / backups
+# ================================
+*.sql
+*.dump
+*.backup
+
+# ================================
+# Nextcloud / OnlyOffice (если появятся)
+# ================================
+nextcloud/data/
+onlyoffice/data/
+
+# ================================
+# Temporary files
+# ================================
+tmp/
+temp/
