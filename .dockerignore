@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Virtualenv
+.venv/
+venv/
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Git
+.git
+.gitignore
+
+# Env
+.env
+.env.*
+
+# Celery
+celerybeat-schedule
+celerybeat-schedule.*
+
+# IDE
+.idea/
+.vscode/

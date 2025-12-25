@@ -1,0 +1,128 @@
+# .github/workflows/ci.yml
+# CI/CD: lint + tests + docker build + deploy (FastAPI)
+
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - feature/**
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  lint:
+    name: Flake8 lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          pip install poetry
+          poetry config virtualenvs.create false
+          poetry install --with test
+
+      - name: Run flake8
+        working-directory: backend
+        run: flake8 .
+
+  test:
+    name: Tests
+    needs: lint
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          pip install poetry
+          poetry config virtualenvs.create false
+          poetry install --with test
+
+      - name: Run pytest
+        working-directory: backend
+        env:
+          DEBUG: "True"
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: test_db
+          DB_USER: test
+          DB_PASSWORD: test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          CELERY_BROKER_URL: redis://localhost:6379/0
+          CELERY_RESULT_BACKEND: redis://localhost:6379/1
+        run: pytest -v
+
+  docker-build:
+    name: Docker build check
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build backend image
+        run: docker build -f infra/Dockerfile.backend -t fominyh-backend .
+
+  deploy:
+    name: Deploy to server
+    needs: docker-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            set -e
+
+            cd ~/FOMINYH_WEBSITE
+
+            echo "Update repository"
+            git fetch origin
+            git reset --hard origin/main
+
+            echo "Rebuild and restart containers"
+            docker compose pull
+            docker compose down
+            docker compose up -d --build
+
+            echo "Deploy completed successfully"
+          EOF
+  
