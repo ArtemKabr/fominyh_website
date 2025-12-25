@@ -6,6 +6,7 @@ from app.core.config import settings
 from app.api.services import router as services_router  # (я добавил)
 from app.api.booking import router as booking_router  # (я добавил)
 
+
 app = FastAPI(title=settings.app_name)
 
 app.include_router(services_router)  # (я добавил)

@@ -12,17 +12,18 @@ from app.models.booking import Booking
 from app.models.service import Service
 from app.models.user import User
 from app.schemas.booking import BookingCreate
-from app.tasks.notifications import send_booking_created  # (я добавил)
 
 
-WORK_START_HOUR = 10  # начало рабочего дня
-WORK_END_HOUR = 20    # конец рабочего дня
-SLOT_MINUTES = 30     # шаг сетки слотов
+WORK_START_HOUR = 10  # начало рабочего дня (я добавил)
+WORK_END_HOUR = 20    # конец рабочего дня (я добавил)
+SLOT_MINUTES = 30     # шаг сетки слотов (я добавил)
 
 
 async def _get_service(db: AsyncSession, service_id: int) -> Service:
-    """Получить услугу или выбросить 404."""
-    result = await db.execute(select(Service).where(Service.id == service_id))
+    """Получить услугу или выбросить 404."""  # (я добавил)
+    result = await db.execute(
+        select(Service).where(Service.id == service_id)
+    )
     service = result.scalar_one_or_none()
 
     if service is None:
@@ -40,16 +41,22 @@ async def _get_or_create_user(
     phone: str,
     email: str | None,
 ) -> User:
-    """Получить пользователя по телефону или создать нового."""
-    result = await db.execute(select(User).where(User.phone == phone))
+    """Получить пользователя по телефону или создать нового."""  # (я добавил)
+    result = await db.execute(
+        select(User).where(User.phone == phone)
+    )
     user = result.scalar_one_or_none()
 
-    if user:
+    if user is not None:
         return user
 
-    user = User(name=name, phone=phone, email=email)
+    user = User(
+        name=name,
+        phone=phone,
+        email=email,
+    )
     db.add(user)
-    await db.flush()  # получаем user.id без commit
+    await db.flush()  # получаем user.id без commit (я добавил)
 
     return user
 
@@ -59,16 +66,22 @@ async def get_free_slots(
     day: date,
     service_id: int | None = None,
 ) -> list[datetime]:
-    """Получить свободные временные слоты на день."""
+    """Получить список свободных временных слотов на день."""  # (я добавил)
 
-    service_duration = timedelta(minutes=SLOT_MINUTES)
+    # определяем длительность услуги
+    service_duration = timedelta(minutes=SLOT_MINUTES)  # (я добавил)
     if service_id is not None:
         service = await _get_service(db, service_id)
-        service_duration = timedelta(minutes=service.duration_minutes)
+        service_duration = timedelta(minutes=service.duration_minutes)  # (я добавил)
 
-    day_start = datetime.combine(day, time(hour=WORK_START_HOUR))
-    day_end = datetime.combine(day, time(hour=WORK_END_HOUR))
+    day_start = datetime.combine(
+        day, time(hour=WORK_START_HOUR, minute=0)
+    )
+    day_end = datetime.combine(
+        day, time(hour=WORK_END_HOUR, minute=0)
+    )
 
+    # получаем все записи с их услугами на этот день
     result = await db.execute(
         select(Booking, Service)
         .join(Service, Service.id == Booking.service_id)
@@ -78,7 +91,7 @@ async def get_free_slots(
         )
     )
 
-    busy_ranges: list[tuple[datetime, datetime]] = []
+    busy_ranges: list[tuple[datetime, datetime]] = []  # (я добавил)
     for booking, service in result.all():
         start = booking.start_time
         end = start + timedelta(minutes=service.duration_minutes)
@@ -88,6 +101,7 @@ async def get_free_slots(
     current = day_start
     now = datetime.now()
 
+    # перебираем сетку слотов
     while current + service_duration <= day_end:
         if current >= now:
             overlap = False
@@ -99,7 +113,7 @@ async def get_free_slots(
             if not overlap:
                 slots.append(current)
 
-        current += timedelta(minutes=SLOT_MINUTES)
+        current += timedelta(minutes=SLOT_MINUTES)  # шаг сетки (я добавил)
 
     return slots
 
@@ -108,7 +122,7 @@ async def create_booking(
     db: AsyncSession,
     booking_in: BookingCreate,
 ) -> Booking:
-    """Создать запись с защитой от пересечений."""
+    """Создать запись с защитой от пересечений."""  # (я добавил)
 
     if booking_in.start_time < datetime.now():
         raise HTTPException(
@@ -122,24 +136,22 @@ async def create_booking(
     booking_start = booking_in.start_time
     booking_end = booking_start + duration
 
-    # получаем все существующие записи с услугами
+    # проверка пересечений с существующими записями
     result = await db.execute(
         select(Booking, Service)
         .join(Service, Service.id == Booking.service_id)
+        .where(
+            Booking.start_time < booking_end,
+            (Booking.start_time + timedelta(minutes=Service.duration_minutes))
+            > booking_start,
+        )
     )
 
-    for existing_booking, existing_service in result.all():
-        existing_start = existing_booking.start_time
-        existing_end = existing_start + timedelta(
-            minutes=existing_service.duration_minutes
+    if result.first() is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Slot overlaps with existing booking",
         )
-
-        # проверка пересечения интервалов
-        if existing_start < booking_end and existing_end > booking_start:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Slot overlaps with existing booking",
-            )
 
     user = await _get_or_create_user(
         db=db,
@@ -157,7 +169,5 @@ async def create_booking(
     db.add(booking)
     await db.commit()
     await db.refresh(booking)
-
-    send_booking_created.delay(booking.id)
 
     return booking

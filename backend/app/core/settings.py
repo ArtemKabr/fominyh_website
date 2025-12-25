@@ -1,4 +1,5 @@
 # backend/app/core/settings.py — настройки приложения
+
 from pydantic_settings import BaseSettings
 
 
@@ -16,6 +17,12 @@ class Settings(BaseSettings):
     db_user: str
     db_password: str
 
+    # Redis / Celery
+    redis_host: str
+    redis_port: int
+    celery_broker_url: str
+    celery_result_backend: str
+
     @property
     def database_url(self) -> str:
         """URL подключения к PostgreSQL (async)."""
@@ -30,4 +37,4 @@ class Settings(BaseSettings):
         extra = "ignore"
 
 
-settings = Settings()
+settings = Settings()  # (я добавил)
