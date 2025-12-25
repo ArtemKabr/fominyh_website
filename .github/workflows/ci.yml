@@ -1,16 +1,18 @@
 # .github/workflows/ci.yml
-# CI/CD: lint + tests + docker build (FastAPI)
+# CI/CD: lint + tests + docker build + deploy (FastAPI)
 
 name: CI Pipeline
 
 on:
   push:
     branches:
+      - main
       - develop
       - feature/**
   pull_request:
     branches:
       - develop
+      - main
 
 jobs:
   lint:
@@ -35,8 +37,7 @@ jobs:
 
       - name: Run flake8
         working-directory: backend
-        run: |
-          flake8 .
+        run: flake8 .
 
   test:
     name: Tests
@@ -78,8 +79,7 @@ jobs:
           REDIS_PORT: 6379
           CELERY_BROKER_URL: redis://localhost:6379/0
           CELERY_RESULT_BACKEND: redis://localhost:6379/1
-        run: |
-          pytest -v
+        run: pytest -v
 
   docker-build:
     name: Docker build check
@@ -91,5 +91,36 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build backend image
+        run: docker build -f infra/Dockerfile.backend -t fominyh-backend .
+
+  deploy:
+    name: Deploy to server
+    needs: docker-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Setup SSH
         run: |
-          docker build -f infra/Dockerfile.backend -t fominyh-backend .
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy via SSH
+        run: |
+          ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            set -e
+
+            cd ~/FOMINYH_WEBSITE
+
+            echo "Update repository"
+            git fetch origin
+            git reset --hard origin/main
+
+            echo "Restart containers"
+            docker-compose down
+            docker-compose up -d --build
+
+            echo "Deploy completed"
+          EOF
