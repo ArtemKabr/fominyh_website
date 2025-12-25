@@ -1,6 +1,7 @@
-# .github/workflows/ci.yml — CI пайплайн (тесты + docker build)
+# .github/workflows/ci.yml
+# CI/CD: lint + tests + docker build (FastAPI)
 
-name: CI
+name: CI Pipeline
 
 on:
   push:
@@ -12,8 +13,34 @@ on:
       - develop
 
 jobs:
-  tests:
-    name: Run tests
+  lint:
+    name: Flake8 lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          pip install poetry
+          poetry config virtualenvs.create false
+          poetry install --with test
+
+      - name: Run flake8
+        working-directory: backend
+        run: |
+          flake8 .
+
+  test:
+    name: Tests
+    needs: lint
     runs-on: ubuntu-latest
 
     services:
@@ -31,14 +58,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Poetry
-        run: |
-          pip install poetry
-          poetry config virtualenvs.create false
-
       - name: Install dependencies
         working-directory: backend
         run: |
+          pip install poetry
+          poetry config virtualenvs.create false
           poetry install --with test
 
       - name: Run pytest
@@ -58,9 +82,9 @@ jobs:
           pytest -v
 
   docker-build:
-    name: Docker build
+    name: Docker build check
+    needs: test
     runs-on: ubuntu-latest
-    needs: tests
 
     steps:
       - name: Checkout code
