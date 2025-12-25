@@ -1,0 +1,12 @@
+# backend/.flake8 — настройки flake8
+
+[flake8]
+max-line-length = 119
+extend-ignore =
+    E203,
+    W503
+exclude =
+    .venv,
+    __pycache__,
+    alembic,
+    migrations

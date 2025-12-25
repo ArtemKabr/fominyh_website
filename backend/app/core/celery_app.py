@@ -26,4 +26,4 @@ celery_app.conf.beat_schedule = {
 }
 
 # ЯВНЫЙ импорт задач (обязательно)
-import app.tasks.notifications  # (я добавил)
+import app.tasks.notifications  # noqa: F401,E402  # (я добавил)
