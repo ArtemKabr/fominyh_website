@@ -13,12 +13,28 @@ services:
     ports:
       - "5432:5432"
 
-
   redis:
     image: redis:7-alpine
     container_name: fominyh_redis
     ports:
       - "6379:6379"
+
+  backend:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.backend
+    container_name: fominyh_backend
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app  # (я добавил)
+    command: >
+      sh -c "
+      alembic upgrade head &&
+      uvicorn app.main:app --host 0.0.0.0 --port 8000
+      "
 
   celery_worker:
     build:
@@ -44,25 +60,15 @@ services:
       - redis
       - db
 
-
-  backend:
+  nginx:
     build:
       context: .
-      dockerfile: infra/Dockerfile.backend
-    container_name: fominyh_backend
-    env_file:
-      - .env
-    depends_on:
-      - db
+      dockerfile: infra/nginx/Dockerfile
+    container_name: fominyh_nginx
     ports:
-      - "8000:8000"
-    volumes:
-      - ./backend:/app   # ВАЖНО
-    command: >
-      sh -c "
-      alembic upgrade head &&
-      uvicorn app.main:app --host 0.0.0.0 --port 8000
-      "
+      - "80:80"
+    depends_on:
+      - backend
 
 volumes:
   pg_data:
