@@ -111,18 +111,19 @@ jobs:
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
-
+          
             cd ~/FOMINYH_WEBSITE
-
+          
             echo "Update repository"
             git fetch origin
             git reset --hard origin/main
-
+          
             echo "Restart containers"
-            docker-compose down
-            docker-compose up -d --build
-
+            docker compose down
+            docker compose up -d --build
+          
             echo "Deploy completed"
           EOF
+ 
   
   

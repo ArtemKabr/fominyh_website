@@ -26,6 +26,7 @@ build-backend = "poetry.core.masonry.api"
 pytest = "^8.0"
 pytest-asyncio = "^0.23"
 httpx = "^0.27"  # (я добавил)
+pytest-cov = "^5.0.0"  # (я добавил)
 
 [tool.poetry.group.lint.dependencies]
 flake8 = "^7.3.0"
