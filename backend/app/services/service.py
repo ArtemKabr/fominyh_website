@@ -9,7 +9,9 @@ from app.schemas.service import ServiceCreate
 
 async def get_services(db: AsyncSession) -> list[Service]:
     """Получить список всех услуг."""  # (я добавил)
-    result = await db.execute(select(Service))
+    result = await db.execute(
+        select(Service).order_by(Service.id)  # (я добавил)
+    )
     return result.scalars().all()
 
 
