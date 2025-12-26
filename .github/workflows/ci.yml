@@ -45,6 +45,20 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
       redis:
         image: redis:7-alpine
         ports:
@@ -65,6 +79,9 @@ jobs:
           pip install poetry
           poetry config virtualenvs.create false
           poetry install --with test
+
+      - name: Wait for Postgres
+        run: sleep 5  # (я добавил)
 
       - name: Run pytest
         working-directory: backend
@@ -125,4 +142,3 @@ jobs:
 
             echo "Deploy completed successfully"
           EOF
-  
