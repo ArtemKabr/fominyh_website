@@ -31,7 +31,6 @@ async def test_engine():
     """Единый async engine для всех тестов (NullPool)."""  # (я добавил)
     from app.core.settings import settings
     from app.core.database import Base
-    import app.models  # (я добавил)
 
     engine = create_async_engine(
         settings.database_url,

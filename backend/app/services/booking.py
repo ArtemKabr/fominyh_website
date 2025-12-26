@@ -119,6 +119,9 @@ async def get_free_slots(
 # СОЗДАНИЕ ЗАПИСИ
 # -------------------------------------------------
 
+# backend/app/services/booking.py — бизнес-логика онлайн-записи
+# Назначение: создание записи с защитой от двойного бронирования
+
 async def create_booking(
     db: AsyncSession,
     booking_in: BookingCreate,
@@ -131,11 +134,13 @@ async def create_booking(
             detail="Start time is in the past",
         )
 
-    service = await _get_service(db, booking_in.service_id)
+    # проверяем, что услуга существует  # (я добавил)
+    await _get_service(db, booking_in.service_id)  # (я добавил)
 
-    start = booking_in.start_time.replace(second=0, microsecond=0)
+    # нормализуем время слота (без секунд)  # (я добавил)
+    start = booking_in.start_time.replace(second=0, microsecond=0)  # (я добавил)
 
-    # нельзя создать активную запись на занятый слот
+    # нельзя создать активную запись на занятый слот  # (я добавил)
     result = await db.execute(
         select(Booking).where(
             Booking.service_id == booking_in.service_id,
@@ -175,7 +180,6 @@ async def create_booking(
 # -------------------------------------------------
 # ОТМЕНА ЗАПИСИ
 # -------------------------------------------------
-
 async def cancel_booking(
     db: AsyncSession,
     booking_id: int,
