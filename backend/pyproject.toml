@@ -1,3 +1,5 @@
+# backend/pyproject.toml — backend FastAPI + Poetry + pytest
+
 [tool.poetry]
 name = "fominyh-website"
 version = "0.1.0"
@@ -11,23 +13,27 @@ python = ">=3.11"
 sqlalchemy = "^2.0.45"
 asyncpg = "^0.31.0"
 fastapi = "^0.115.0"
-uvicorn = {extras = ["standard"], version = "^0.30.0"}
+uvicorn = { extras = ["standard"], version = "^0.30.0" }
 pydantic-settings = "^2.6.0"
 alembic = "^1.17.2"
-
 celery = "^5.4.0"
 redis = "^5.0.1"
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0"
 pytest-asyncio = "^0.23"
-httpx = "^0.27"  # (я добавил)
-pytest-cov = "^5.0.0"  # (я добавил)
+pytest-cov = "^5.0.0"
+httpx = "^0.27"
 
 [tool.poetry.group.lint.dependencies]
 flake8 = "^7.3.0"
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["app"]
+asyncio_mode = "auto"
+addopts = "--cov=app --cov-report=term-missing"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

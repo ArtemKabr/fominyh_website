@@ -17,9 +17,9 @@ class Settings(BaseSettings):
     db_user: str
     db_password: str
 
-    # Celery / Redis (ТОЛЬКО URL)
-    celery_broker_url: str
-    celery_result_backend: str
+    # Celery / Redis
+    celery_broker_url: str | None = None  # (я добавил)
+    celery_result_backend: str | None = None  # (я добавил)
 
     @property
     def database_url(self) -> str:

@@ -1,0 +1,12 @@
+[run]
+omit =
+    app/api/schedule.py
+    app/core/celery_app.py
+    app/tasks/*
+    app/schemas/schedule.py
+    app/core/database.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:

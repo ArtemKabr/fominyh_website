@@ -26,15 +26,18 @@ services:
     container_name: fominyh_backend
     env_file:
       - .env
+    environment:
+      PYTHONPATH: /app   # (я добавил)
     depends_on:
       - db
     volumes:
-      - ./backend:/app  # (я добавил)
+      - ./backend:/app
     command: >
       sh -c "
       alembic upgrade head &&
       uvicorn app.main:app --host 0.0.0.0 --port 8000
       "
+  
 
   celery_worker:
     build:

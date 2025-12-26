@@ -1,4 +1,5 @@
 # backend/app/models/booking.py — модель записи
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -11,9 +12,9 @@ from app.core.database import Base
 
 
 class BookingStatus(str, Enum):
-    """Статусы записи."""
+    """Статусы записи."""  # (я добавил)
 
-    PLANNED = "planned"
+    ACTIVE = "active"      # (я добавил)
     CANCELED = "canceled"
 
 
@@ -31,16 +32,16 @@ class Booking(Base):
 
     status: Mapped[str] = mapped_column(
         String(20),
-        default=BookingStatus.PLANNED.value,
+        default=BookingStatus.ACTIVE.value,  # (я добавил)
         nullable=False,
     )
 
-    reminder_24h_task_id: Mapped[str | None] = mapped_column(  # (я добавил)
+    reminder_24h_task_id: Mapped[str | None] = mapped_column(
         String(50),
         nullable=True,
     )
 
-    reminder_2h_task_id: Mapped[str | None] = mapped_column(  # (я добавил)
+    reminder_2h_task_id: Mapped[str | None] = mapped_column(
         String(50),
         nullable=True,
     )

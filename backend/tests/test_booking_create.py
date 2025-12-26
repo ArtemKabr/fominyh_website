@@ -1,4 +1,5 @@
 # backend/tests/test_booking_create.py — тест создания записи (API)
+
 import pytest
 
 
@@ -9,12 +10,12 @@ async def test_create_booking(client, monkeypatch):
     async def fake_create_booking(*, db, booking_in):
         return {
             "id": 1,
-            "user_id": 1,  # обязателен для BookingRead  # (я добавил)
+            "user_id": 1,
             "service_id": booking_in.service_id,
             "start_time": booking_in.start_time,
         }
 
-    # мокаем сервисный слой  # (я добавил)
+    # ⚠️ МОКАЕМ ИМЕННО ТО МЕСТО, ОТКУДА ВЫЗЫВАЮТ
     monkeypatch.setattr(
         "app.api.booking.create_booking",
         fake_create_booking,

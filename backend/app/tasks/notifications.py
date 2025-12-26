@@ -1,4 +1,5 @@
 # backend/app/tasks/notifications.py — задачи уведомлений
+# Назначение: Celery-задачи уведомлений (заглушки)
 
 from time import sleep
 from datetime import datetime, timedelta
@@ -6,8 +7,10 @@ import asyncio
 
 from celery import shared_task
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
 
-from app.core.database import async_session_maker
+from app.core.database import get_engine  # (я добавил)
 from app.models.booking import Booking
 
 
@@ -38,7 +41,15 @@ def check_upcoming_bookings():
     tomorrow = now + timedelta(days=1)
 
     async def _check():
-        async with async_session_maker() as session:
+        engine = get_engine()  # (я добавил)
+
+        async_session = sessionmaker(
+            bind=engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+        )
+
+        async with async_session() as session:
             result = await session.execute(
                 select(Booking).where(
                     Booking.start_time >= now,

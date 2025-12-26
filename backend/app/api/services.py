@@ -15,7 +15,7 @@ router = APIRouter(prefix="/api/services", tags=["Services"])
     response_model=list[ServiceRead],
 )
 async def list_services(db: AsyncSession = Depends(get_db)):
-    """Список услуг."""  # (я добавил)
+    """Список услуг."""
     return await get_services(db)
 
 
@@ -28,5 +28,5 @@ async def add_service(
     service_in: ServiceCreate,
     db: AsyncSession = Depends(get_db),
 ):
-    """Создание услуги."""  # (я добавил)
+    """Создание услуги."""
     return await create_service(db, service_in)
