@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Admin
-    admin_token: str
+    admin_token: str | None = None
 
     # Database
     db_host: str
