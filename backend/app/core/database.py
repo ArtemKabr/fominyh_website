@@ -1,6 +1,4 @@
-# backend/app/core/database.py — подключение БД и Base
-# Назначение: единая точка работы с Async SQLAlchemy
-
+# backend/app/core/database.py — подключение БД и зависимости
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (
@@ -17,41 +15,30 @@ class Base(DeclarativeBase):
     """Базовый класс для всех моделей."""
 
 
+DATABASE_URL = settings.database_url
+
 _engine: AsyncEngine | None = None
-_sessionmaker: sessionmaker | None = None
 
 
 def get_engine() -> AsyncEngine:
-    """Ленивая инициализация AsyncEngine."""  # (я добавил)
-    global _engine, _sessionmaker
-
+    """Получить engine (нужно для тестов)."""
+    global _engine
     if _engine is None:
         _engine = create_async_engine(
-            settings.database_url,
-            echo=settings.debug,
-            pool_pre_ping=True,
+            DATABASE_URL,
+            echo=False,
         )
-        _sessionmaker = sessionmaker(
-            bind=_engine,
-            class_=AsyncSession,
-            expire_on_commit=False,
-        )
-
     return _engine
 
 
-async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
-    """Async-сессия БД для FastAPI."""  # (я добавил)
-    if _sessionmaker is None:
-        get_engine()
+async_session_maker = sessionmaker(
+    bind=get_engine(),
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
 
-    async with _sessionmaker() as session:
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Получение сессии БД."""
+    async with async_session_maker() as session:
         yield session
-
-
-async def shutdown_engine() -> None:
-    """Корректное закрытие engine при shutdown."""  # (я добавил)
-    global _engine
-    if _engine is not None:
-        await _engine.dispose()
-        _engine = None
