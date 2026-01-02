@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum  # (я добавил)
+from enum import Enum
 
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -12,9 +12,9 @@ from app.core.database import Base
 
 
 class BookingStatus(str, Enum):
-    """Статусы записи."""  # (я добавил)
+    """Статусы записи."""
 
-    ACTIVE = "active"      # (я добавил)
+    ACTIVE = "active"
     CANCELED = "canceled"
 
 
@@ -32,7 +32,7 @@ class Booking(Base):
 
     status: Mapped[str] = mapped_column(
         String(20),
-        default=BookingStatus.ACTIVE.value,  # (я добавил)
+        default=BookingStatus.ACTIVE.value,
         nullable=False,
     )
 

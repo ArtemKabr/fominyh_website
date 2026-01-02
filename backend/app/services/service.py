@@ -8,9 +8,9 @@ from app.schemas.service import ServiceCreate
 
 
 async def get_services(db: AsyncSession) -> list[Service]:
-    """Получить список всех услуг."""  # (я добавил)
+    """Получить список всех услуг."""
     result = await db.execute(
-        select(Service).order_by(Service.id)  # (я добавил)
+        select(Service).order_by(Service.id)
     )
     return result.scalars().all()
 
@@ -19,7 +19,7 @@ async def create_service(
     db: AsyncSession,
     service_in: ServiceCreate,
 ) -> Service:
-    """Создать новую услугу."""  # (я добавил)
+    """Создать новую услугу."""
     service = Service(**service_in.model_dump())
     db.add(service)
     await db.commit()

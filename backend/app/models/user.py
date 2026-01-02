@@ -6,7 +6,7 @@ from app.core.database import Base
 
 
 class User(Base):
-    """Клиент салона."""  # (я добавил)
+    """Клиент салона."""
 
     __tablename__ = "users"
 

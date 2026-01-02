@@ -5,9 +5,9 @@ from app.core.config import settings
 
 
 def require_admin_token(x_admin_token: str | None = Header(default=None)) -> None:
-    """Проверка админского токена из заголовка X-Admin-Token."""  # (я добавил)
-    if not x_admin_token or x_admin_token != settings.admin_token:  # (я добавил)
-        raise HTTPException(  # (я добавил)
-            status_code=status.HTTP_401_UNAUTHORIZED,  # (я добавил)
-            detail="Неавторизовано: неверный X-Admin-Token",  # (я добавил)
-        )  # (я добавил)
+    """Проверка админского токена из заголовка X-Admin-Token."""
+    if not x_admin_token or x_admin_token != settings.admin_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неавторизовано: неверный X-Admin-Token",
+        )

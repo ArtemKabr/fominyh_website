@@ -11,13 +11,13 @@ celery_app = Celery(
     backend=settings.celery_result_backend,
 )
 
-# Базовая конфигурация Celery  # (я добавил)
+# Базовая конфигурация Celery
 celery_app.conf.update(
-    timezone="Europe/Moscow",  # (я добавил)
-    enable_utc=False,          # (я добавил)
+    timezone="Europe/Moscow",
+    enable_utc=False,
 )
 
-# Celery Beat — периодические задачи  # (я добавил)
+# Celery Beat — периодические задачи
 celery_app.conf.beat_schedule = {
     "check-bookings-reminders-every-5-minutes": {
         "task": "app.tasks.notifications.check_upcoming_bookings",
@@ -26,4 +26,4 @@ celery_app.conf.beat_schedule = {
 }
 
 # ЯВНЫЙ импорт задач (обязательно)
-import app.tasks.notifications  # noqa: F401,E402  # (я добавил)
+import app.tasks.notifications  # noqa: F401,E402

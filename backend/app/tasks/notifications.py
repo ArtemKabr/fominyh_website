@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 
-from app.core.database import get_engine  # (я добавил)
+from app.core.database import get_engine
 from app.models.booking import Booking
 
 
@@ -35,13 +35,13 @@ def check_upcoming_bookings():
     """
     Periodic-задача (Celery Beat).
     Проверка записей на сегодня и завтра.
-    """  # (я добавил)
+    """
 
     now = datetime.now()
     tomorrow = now + timedelta(days=1)
 
     async def _check():
-        engine = get_engine()  # (я добавил)
+        engine = get_engine()
 
         async_session = sessionmaker(
             bind=engine,
@@ -59,7 +59,7 @@ def check_upcoming_bookings():
             bookings = result.scalars().all()
 
             for booking in bookings:
-                # TODO: отправка email / telegram  # (я добавил)
+                # TODO: отправка email / telegram
                 print(f"[CELERY][BEAT] Upcoming booking: {booking.id}")
 
-    asyncio.run(_check())  # (я добавил)
+    asyncio.run(_check())

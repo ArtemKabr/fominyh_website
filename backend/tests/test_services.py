@@ -5,7 +5,7 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_get_services(client):
-    """Получение списка услуг."""  # (я добавил)
+    """Получение списка услуг."""
 
     response = await client.get("/api/services")
 

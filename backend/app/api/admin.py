@@ -18,9 +18,10 @@ router = APIRouter(
 
 # ---------- SERVICES ----------
 
+
 @router.get("/services")
 async def admin_list_services(db: AsyncSession = Depends(get_async_session)) -> list[dict]:
-    """Список услуг (админ)."""  # (я добавил)
+    """Список услуг (админ)."""
     res = await db.execute(select(Service).order_by(Service.id))
     return [
         {
@@ -36,7 +37,7 @@ async def admin_list_services(db: AsyncSession = Depends(get_async_session)) -> 
 
 @router.post("/services", status_code=status.HTTP_201_CREATED)
 async def admin_create_service(payload: dict, db: AsyncSession = Depends(get_async_session)) -> dict:
-    """Создание услуги (админ)."""  # (я добавил)
+    """Создание услуги (админ)."""
     service = Service(**payload)
     db.add(service)
     await db.commit()
@@ -48,7 +49,7 @@ async def admin_create_service(payload: dict, db: AsyncSession = Depends(get_asy
 async def admin_update_service(
     service_id: int, payload: dict, db: AsyncSession = Depends(get_async_session)
 ) -> dict:
-    """Обновление услуги (админ)."""  # (я добавил)
+    """Обновление услуги (админ)."""
     res = await db.execute(select(Service).where(Service.id == service_id))
     service = res.scalar_one_or_none()
     if not service:
@@ -62,11 +63,12 @@ async def admin_update_service(
 
 @router.delete("/services/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def admin_delete_service(service_id: int, db: AsyncSession = Depends(get_async_session)) -> None:
-    """Удаление услуги (админ)."""  # (я добавил)
+    """Удаление услуги (админ)."""
     await db.execute(delete(Service).where(Service.id == service_id))
     await db.commit()
 
 # ---------- BOOKINGS ----------
+
 
 @router.get("/bookings")
 async def admin_list_bookings(
@@ -75,7 +77,7 @@ async def admin_list_bookings(
     service_id: int | None = Query(default=None),
     db: AsyncSession = Depends(get_async_session),
 ) -> list[dict]:
-    """Список записей (админ)."""  # (я добавил)
+    """Список записей (админ)."""
     stmt = select(Booking).order_by(Booking.id)
     if date_from:
         stmt = stmt.where(Booking.start_at >= date_from)
@@ -100,12 +102,12 @@ async def admin_list_bookings(
 
 @router.post("/bookings/{booking_id}/cancel")
 async def admin_cancel_booking(booking_id: int, db: AsyncSession = Depends(get_async_session)) -> dict:
-    """Отмена записи (админ)."""  # (я добавил)
+    """Отмена записи (админ)."""
     res = await db.execute(select(Booking).where(Booking.id == booking_id))
     booking = res.scalar_one_or_none()
     if not booking:
         raise HTTPException(status_code=404, detail="Запись не найдена")
     if hasattr(booking, "status"):
-        booking.status = "cancelled"  # (я добавил)
+        booking.status = "cancelled"
     await db.commit()
     return {"ok": True}

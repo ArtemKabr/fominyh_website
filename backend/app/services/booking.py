@@ -13,7 +13,7 @@ from app.models.booking import Booking, BookingStatus
 from app.models.service import Service
 from app.models.user import User
 from app.schemas.booking import BookingCreate
-from app.tasks.notifications import send_booking_created  # (я добавил)
+from app.tasks.notifications import send_booking_created
 
 
 WORK_START_HOUR = 10
@@ -26,7 +26,7 @@ SLOT_MINUTES = 30
 # -------------------------------------------------
 
 async def _get_service(db: AsyncSession, service_id: int) -> Service:
-    """Получить услугу или выбросить 404."""  # (я добавил)
+    """Получить услугу или выбросить 404."""
     result = await db.execute(
         select(Service).where(Service.id == service_id)
     )
@@ -47,7 +47,7 @@ async def _get_or_create_user(
     phone: str,
     email: str | None,
 ) -> User:
-    """Получить пользователя по телефону или создать нового."""  # (я добавил)
+    """Получить пользователя по телефону или создать нового."""
     result = await db.execute(
         select(User).where(User.phone == phone)
     )
@@ -62,7 +62,7 @@ async def _get_or_create_user(
         email=email,
     )
     db.add(user)
-    await db.flush()  # (я добавил)
+    await db.flush()
 
     return user
 
@@ -76,7 +76,7 @@ async def get_free_slots(
     day: date,
     service_id: int,
 ) -> list[datetime]:
-    """Получить свободные временные слоты на день."""  # (я добавил)
+    """Получить свободные временные слоты на день."""
 
     service = await _get_service(db, service_id)
     duration = timedelta(minutes=service.duration_minutes)
@@ -100,7 +100,7 @@ async def get_free_slots(
         if booking.status == BookingStatus.ACTIVE.value:
             busy.add(booking.start_time)
         else:
-            # отменённые записи считаем свободными  # (я добавил)
+            # отменённые записи считаем свободными
             free.add(booking.start_time.replace(second=0, microsecond=0))
 
     # базовая сетка (на будущее)
@@ -126,7 +126,7 @@ async def create_booking(
     db: AsyncSession,
     booking_in: BookingCreate,
 ) -> Booking:
-    """Создать запись с защитой от двойного бронирования."""  # (я добавил)
+    """Создать запись с защитой от двойного бронирования."""
 
     if booking_in.start_time < datetime.now():
         raise HTTPException(
@@ -134,13 +134,13 @@ async def create_booking(
             detail="Start time is in the past",
         )
 
-    # проверяем, что услуга существует  # (я добавил)
-    await _get_service(db, booking_in.service_id)  # (я добавил)
+    # проверяем, что услуга существует
+    await _get_service(db, booking_in.service_id)
 
-    # нормализуем время слота (без секунд)  # (я добавил)
-    start = booking_in.start_time.replace(second=0, microsecond=0)  # (я добавил)
+    # нормализуем время слота (без секунд)
+    start = booking_in.start_time.replace(second=0, microsecond=0)
 
-    # нельзя создать активную запись на занятый слот  # (я добавил)
+    # нельзя создать активную запись на занятый слот
     result = await db.execute(
         select(Booking).where(
             Booking.service_id == booking_in.service_id,
@@ -172,7 +172,7 @@ async def create_booking(
     await db.commit()
     await db.refresh(booking)
 
-    send_booking_created.delay(booking.id)  # (я добавил)
+    send_booking_created.delay(booking.id)
 
     return booking
 
@@ -184,7 +184,7 @@ async def cancel_booking(
     db: AsyncSession,
     booking_id: int,
 ) -> Booking:
-    """Отмена записи (soft cancel)."""  # (я добавил)
+    """Отмена записи (soft cancel)."""
 
     result = await db.execute(
         select(Booking).where(Booking.id == booking_id)
@@ -197,7 +197,7 @@ async def cancel_booking(
             detail="Booking not found",
         )
 
-    booking.status = BookingStatus.CANCELED.value  # (я добавил)
+    booking.status = BookingStatus.CANCELED.value
     await db.commit()
     await db.refresh(booking)
 

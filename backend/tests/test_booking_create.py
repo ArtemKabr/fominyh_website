@@ -5,7 +5,7 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_create_booking(client, monkeypatch):
-    """Создание записи через API."""  # (я добавил)
+    """Создание записи через API."""
 
     async def fake_create_booking(*, db, booking_in):
         return {

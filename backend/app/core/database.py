@@ -14,15 +14,15 @@ from app.core.settings import settings
 
 
 class Base(DeclarativeBase):
-    """Базовый класс для всех моделей."""  # (я добавил)
+    """Базовый класс для всех моделей."""
 
 
-_engine: AsyncEngine | None = None  # (я добавил)
-_session_maker: sessionmaker | None = None  # (я добавил)
+_engine: AsyncEngine | None = None
+_session_maker: sessionmaker | None = None
 
 
 def get_engine() -> AsyncEngine:
-    """Ленивая инициализация engine."""  # (я добавил)
+    """Ленивая инициализация engine."""
     global _engine, _session_maker
 
     if _engine is None:
@@ -41,20 +41,20 @@ def get_engine() -> AsyncEngine:
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Сессия БД на запрос."""  # (я добавил)
+    """Сессия БД на запрос."""
     if _session_maker is None:
-        get_engine()  # (я добавил)
+        get_engine()
 
     async with _session_maker() as session:
         yield session
 
 
 # alias для FastAPI dependencies
-get_async_session = get_db  # (я добавил)
+get_async_session = get_db
 
 
 async def shutdown_engine() -> None:
-    """Корректное закрытие engine."""  # (я добавил)
+    """Корректное закрытие engine."""
     global _engine
     if _engine is not None:
         await _engine.dispose()

@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     debug: bool = False
 
     # Admin
-    admin_token: str  # (я добавил)
+    admin_token: str
 
     # Database
     db_host: str
@@ -21,8 +21,8 @@ class Settings(BaseSettings):
     db_password: str
 
     # Celery / Redis
-    celery_broker_url: str | None = None  # (я добавил)
-    celery_result_backend: str | None = None  # (я добавил)
+    celery_broker_url: str | None = None
+    celery_result_backend: str | None = None
 
     @property
     def database_url(self) -> str:

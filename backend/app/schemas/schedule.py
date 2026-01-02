@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class FreeSlot(BaseModel):
-    """Свободный временной слот."""  # (я добавил)
+    """Свободный временной слот."""
 
     start_time: datetime
     end_time: datetime
