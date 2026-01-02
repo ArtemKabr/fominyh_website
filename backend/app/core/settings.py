@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     app_name: str = "FOMINYH WEBSITE"
     debug: bool = False
 
+    # Admin
+    admin_token: str  # (я добавил)
+
     # Database
     db_host: str
     db_port: int

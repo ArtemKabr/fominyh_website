@@ -49,6 +49,10 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         yield session
 
 
+# alias для FastAPI dependencies
+get_async_session = get_db  # (я добавил)
+
+
 async def shutdown_engine() -> None:
     """Корректное закрытие engine."""  # (я добавил)
     global _engine
