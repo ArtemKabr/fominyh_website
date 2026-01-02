@@ -6,7 +6,7 @@ from datetime import date
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
+from app.core.database import get_async_session
 from app.schemas.booking import BookingCreate, BookingRead
 from app.services.booking import (
     create_booking,
@@ -25,7 +25,7 @@ router = APIRouter(
 async def schedule_free(
     day: date = Query(..., description="День в формате YYYY-MM-DD"),
     service_id: int = Query(..., description="ID услуги"),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Свободные слоты на день."""
     slots = await get_free_slots(
@@ -47,7 +47,7 @@ async def schedule_free(
 )
 async def booking_create(
     booking_in: BookingCreate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Создание записи."""
     booking = await create_booking(
@@ -64,7 +64,7 @@ async def booking_create(
 )
 async def booking_cancel(
     booking_id: int,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Отмена записи."""
     booking = await cancel_booking(

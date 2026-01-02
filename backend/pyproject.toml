@@ -18,6 +18,9 @@ pydantic-settings = "^2.6.0"
 alembic = "^1.17.2"
 celery = "^5.4.0"
 redis = "^5.0.1"
+python-jose = { extras = ["cryptography"], version = "^3.3.0" }
+passlib = { extras = ["bcrypt"], version = "^1.7.4" }
+email-validator = "^2.1.0"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.0"
