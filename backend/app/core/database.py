@@ -1,5 +1,5 @@
 # backend/app/core/database.py — подключение БД и Base
-# Назначение: lazy-инициализация engine внутри event loop
+# Назначение: единая точка работы с Async SQLAlchemy
 
 from typing import AsyncGenerator
 
@@ -18,20 +18,20 @@ class Base(DeclarativeBase):
 
 
 _engine: AsyncEngine | None = None
-_session_maker: sessionmaker | None = None
+_sessionmaker: sessionmaker | None = None
 
 
 def get_engine() -> AsyncEngine:
-    """Ленивая инициализация engine."""
-    global _engine, _session_maker
+    """Ленивая инициализация AsyncEngine."""  # (я добавил)
+    global _engine, _sessionmaker
 
     if _engine is None:
         _engine = create_async_engine(
             settings.database_url,
-            echo=False,
+            echo=settings.debug,
             pool_pre_ping=True,
         )
-        _session_maker = sessionmaker(
+        _sessionmaker = sessionmaker(
             bind=_engine,
             class_=AsyncSession,
             expire_on_commit=False,
@@ -40,21 +40,17 @@ def get_engine() -> AsyncEngine:
     return _engine
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Сессия БД на запрос."""
-    if _session_maker is None:
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """Async-сессия БД для FastAPI."""  # (я добавил)
+    if _sessionmaker is None:
         get_engine()
 
-    async with _session_maker() as session:
+    async with _sessionmaker() as session:
         yield session
 
 
-# alias для FastAPI dependencies
-get_async_session = get_db
-
-
 async def shutdown_engine() -> None:
-    """Корректное закрытие engine."""
+    """Корректное закрытие engine при shutdown."""  # (я добавил)
     global _engine
     if _engine is not None:
         await _engine.dispose()

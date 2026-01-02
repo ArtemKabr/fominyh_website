@@ -12,18 +12,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.booking import Booking, BookingStatus
 from app.models.service import Service
 from app.models.user import User
+from app.models.salon_settings import SalonSettings  # (я добавил)
 from app.schemas.booking import BookingCreate
 from app.tasks.notifications import send_booking_created
-
-
-WORK_START_HOUR = 10
-WORK_END_HOUR = 20
-SLOT_MINUTES = 30
 
 
 # -------------------------------------------------
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 # -------------------------------------------------
+
 
 async def _get_service(db: AsyncSession, service_id: int) -> Service:
     """Получить услугу или выбросить 404."""
@@ -67,18 +64,38 @@ async def _get_or_create_user(
     return user
 
 
+async def _get_salon_settings(db: AsyncSession) -> SalonSettings:
+    """Получить настройки салона (всегда одна строка)."""  # (я добавил)
+
+    result = await db.execute(
+        select(SalonSettings).where(SalonSettings.id == 1)
+    )
+    settings = result.scalar_one_or_none()
+
+    if settings is None:
+        settings = SalonSettings(id=1)
+        db.add(settings)
+        await db.commit()
+        await db.refresh(settings)
+
+    return settings
+
+
 # -------------------------------------------------
 # СВОБОДНЫЕ СЛОТЫ
 # -------------------------------------------------
+
 
 async def get_free_slots(
     db: AsyncSession,
     day: date,
     service_id: int,
 ) -> list[datetime]:
-    """Получить свободные временные слоты на день."""
+    """Получить свободные временные слоты на день."""  # (я добавил)
 
     service = await _get_service(db, service_id)
+    salon = await _get_salon_settings(db)  # (я добавил)
+
     duration = timedelta(minutes=service.duration_minutes)
 
     day_start = datetime.combine(day, time.min)
@@ -87,8 +104,8 @@ async def get_free_slots(
     result = await db.execute(
         select(Booking).where(
             Booking.service_id == service_id,
-            Booking.start_time >= day_start,
-            Booking.start_time <= day_end,
+            Booking.start_at >= day_start,  # (я добавил)
+            Booking.start_at <= day_end,    # (я добавил)
         )
     )
     bookings = result.scalars().all()
@@ -98,24 +115,32 @@ async def get_free_slots(
 
     for booking in bookings:
         if booking.status == BookingStatus.ACTIVE.value:
-            busy.add(booking.start_time)
-        else:
-            free.add(booking.start_time.replace(second=0, microsecond=0))
+            busy.add(
+                booking.start_at.replace(second=0, microsecond=0)
+            )  # (я добавил)
 
-    current = datetime.combine(day, time(hour=WORK_START_HOUR))
-    end = datetime.combine(day, time(hour=WORK_END_HOUR))
+    current = datetime.combine(
+        day,
+        time(hour=salon.work_start_hour),
+    )
+    end = datetime.combine(
+        day,
+        time(hour=salon.work_end_hour),
+    )
 
     while current + duration <= end:
         if current not in busy:
             free.add(current)
-        current += timedelta(minutes=SLOT_MINUTES)
+        current += timedelta(minutes=salon.slot_minutes)
 
     return sorted(free)
+
 
 
 # -------------------------------------------------
 # СОЗДАНИЕ ЗАПИСИ
 # -------------------------------------------------
+
 
 async def create_booking(
     db: AsyncSession,
@@ -172,6 +197,7 @@ async def create_booking(
 # -------------------------------------------------
 # ОТМЕНА ЗАПИСИ
 # -------------------------------------------------
+
 
 async def cancel_booking(
     db: AsyncSession,
