@@ -7,7 +7,7 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_double_booking_not_allowed(client):
-    """Нельзя создать две записи на один слот."""  # (я добавил)
+    """Нельзя создать две записи на один слот."""
 
     service_resp = await client.post(
         "/api/services",

@@ -20,7 +20,7 @@ SLOT_MINUTES = 30     # шаг сетки слотов (я добавил)
 
 
 async def _get_service(db: AsyncSession, service_id: int) -> Service:
-    """Получить услугу или выбросить 404."""  # (я добавил)
+    """Получить услугу или выбросить 404."""
     result = await db.execute(
         select(Service).where(Service.id == service_id)
     )
@@ -41,7 +41,7 @@ async def _get_or_create_user(
     phone: str,
     email: str | None,
 ) -> User:
-    """Получить пользователя по телефону или создать нового."""  # (я добавил)
+    """Получить пользователя по телефону или создать нового."""
     result = await db.execute(
         select(User).where(User.phone == phone)
     )
@@ -66,13 +66,13 @@ async def get_free_slots(
     day: date,
     service_id: int | None = None,
 ) -> list[datetime]:
-    """Получить список свободных временных слотов на день."""  # (я добавил)
+    """Получить список свободных временных слотов на день."""
 
     # определяем длительность услуги
-    service_duration = timedelta(minutes=SLOT_MINUTES)  # (я добавил)
+    service_duration = timedelta(minutes=SLOT_MINUTES)
     if service_id is not None:
         service = await _get_service(db, service_id)
-        service_duration = timedelta(minutes=service.duration_minutes)  # (я добавил)
+        service_duration = timedelta(minutes=service.duration_minutes)
 
     day_start = datetime.combine(
         day, time(hour=WORK_START_HOUR, minute=0)
@@ -91,7 +91,7 @@ async def get_free_slots(
         )
     )
 
-    busy_ranges: list[tuple[datetime, datetime]] = []  # (я добавил)
+    busy_ranges: list[tuple[datetime, datetime]] = []
     for booking, service in result.all():
         start = booking.start_time
         end = start + timedelta(minutes=service.duration_minutes)
@@ -122,7 +122,7 @@ async def create_booking(
     db: AsyncSession,
     booking_in: BookingCreate,
 ) -> Booking:
-    """Создать запись с защитой от пересечений."""  # (я добавил)
+    """Создать запись с защитой от пересечений."""
 
     if booking_in.start_time < datetime.now():
         raise HTTPException(

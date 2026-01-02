@@ -7,7 +7,7 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_cancel_booking(client):
-    """Отмена записи освобождает слот."""  # (я добавил)
+    """Отмена записи освобождает слот."""
 
     service_resp = await client.post(
         "/api/services",

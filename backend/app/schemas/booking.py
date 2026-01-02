@@ -1,18 +1,18 @@
-# backend/app/schemas/booking.py — pydantic-схемы записи # (я добавил)
+# backend/app/schemas/booking.py — pydantic-схемы записи
 
 from datetime import date, datetime
 from pydantic import BaseModel, Field
 
 
 class FreeSlotsQuery(BaseModel):
-    """Параметры запроса свободных слотов."""  # (я добавил)
+    """Параметры запроса свободных слотов."""
 
     day: date
     service_id: int | None = None
 
 
 class BookingCreate(BaseModel):
-    """Схема создания записи клиента."""  # (я добавил)
+    """Схема создания записи клиента."""
 
     service_id: int
     start_time: datetime
@@ -23,7 +23,7 @@ class BookingCreate(BaseModel):
 
 
 class BookingRead(BaseModel):
-    """Схема чтения записи."""  # (я добавил)
+    """Схема чтения записи."""
 
     id: int
     user_id: int

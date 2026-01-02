@@ -34,7 +34,7 @@ services:
     env_file:
       - .env
     environment:
-      PYTHONPATH: /app   # (я добавил)
+      PYTHONPATH: /app   
     volumes:
       - ./backend:/app
     depends_on:

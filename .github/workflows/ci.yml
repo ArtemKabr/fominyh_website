@@ -81,7 +81,7 @@ jobs:
           poetry install --with test
 
       - name: Wait for Postgres
-        run: sleep 5  # (я добавил)
+        run: sleep 5  
 
       - name: Run migrations
         working-directory: backend
@@ -91,7 +91,7 @@ jobs:
           DB_NAME: test_db
           DB_USER: test
           DB_PASSWORD: test
-        run: alembic upgrade head  # (я добавил)
+        run: alembic upgrade head  
 
       - name: Run pytest
         working-directory: backend

@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-from app.core.database import Base  # (я добавил)
-from app.core.settings import settings  # (я добавил)
+from app.core.database import Base
+from app.core.settings import settings
 import app.models
 
 config = context.config
@@ -16,12 +16,12 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = Base.metadata  # (я добавил)
+target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
     """Запуск миграций в offline-режиме."""
-    url = settings.database_url  # (я добавил)
+    url = settings.database_url
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -36,7 +36,7 @@ def run_migrations_offline() -> None:
 async def run_migrations_online() -> None:
     """Запуск миграций в online-режиме."""
     configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = settings.database_url  # (я добавил)
+    configuration["sqlalchemy.url"] = settings.database_url
 
     connectable = async_engine_from_config(
         configuration,
@@ -53,7 +53,7 @@ async def run_migrations_online() -> None:
         )
 
         async with connection.begin():
-            await connection.run_sync(lambda _: context.run_migrations())  # (я добавил)
+            await connection.run_sync(lambda _: context.run_migrations())
 
 
 if context.is_offline_mode():

@@ -15,11 +15,11 @@ from sqlalchemy.pool import NullPool
 # ENV для тестов
 # ---------------------------------------------------------------------
 
-os.environ.setdefault("DB_HOST", "db")            # (я добавил)
-os.environ.setdefault("DB_PORT", "5432")          # (я добавил)
-os.environ.setdefault("DB_NAME", "fominyh_db")    # (я добавил)
-os.environ.setdefault("DB_USER", "postgres")      # (я добавил)
-os.environ.setdefault("DB_PASSWORD", "postgres")  # (я добавил)
+os.environ.setdefault("DB_HOST", "db")
+os.environ.setdefault("DB_PORT", "5432")
+os.environ.setdefault("DB_NAME", "fominyh_db")
+os.environ.setdefault("DB_USER", "postgres")
+os.environ.setdefault("DB_PASSWORD", "postgres")
 
 
 # ---------------------------------------------------------------------
@@ -28,22 +28,22 @@ os.environ.setdefault("DB_PASSWORD", "postgres")  # (я добавил)
 
 @pytest_asyncio.fixture(scope="session")
 async def test_engine():
-    """Единый async engine для всех тестов (NullPool)."""  # (я добавил)
+    """Единый async engine для всех тестов (NullPool)."""
     from app.core.settings import settings
     from app.core.database import Base
 
     engine = create_async_engine(
         settings.database_url,
         echo=False,
-        poolclass=NullPool,  # (я добавил)
+        poolclass=NullPool,
     )
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)  # (я добавил)
+        await conn.run_sync(Base.metadata.create_all)
 
     yield engine
 
-    await engine.dispose()  # (я добавил)
+    await engine.dispose()
 
 
 # ---------------------------------------------------------------------
@@ -52,7 +52,7 @@ async def test_engine():
 
 @pytest_asyncio.fixture(autouse=True)
 async def override_database(test_engine, monkeypatch):
-    """Полная подмена engine и get_db на тестовые."""  # (я добавил)
+    """Полная подмена engine и get_db на тестовые."""
     from app.core import database
 
     async_session = sessionmaker(
@@ -62,14 +62,14 @@ async def override_database(test_engine, monkeypatch):
     )
 
     # get_engine -> test_engine
-    monkeypatch.setattr(database, "get_engine", lambda: test_engine)  # (я добавил)
+    monkeypatch.setattr(database, "get_engine", lambda: test_engine)
 
     # get_db -> session from test_engine
     async def _get_db():
         async with async_session() as session:
             yield session
 
-    monkeypatch.setattr(database, "get_db", _get_db)  # (я добавил)
+    monkeypatch.setattr(database, "get_db", _get_db)
 
 
 # ---------------------------------------------------------------------
@@ -78,7 +78,7 @@ async def override_database(test_engine, monkeypatch):
 
 @pytest_asyncio.fixture
 async def app():
-    """FastAPI приложение."""  # (я добавил)
+    """FastAPI приложение."""
     from app.main import app as fastapi_app
     return fastapi_app
 
@@ -89,8 +89,8 @@ async def app():
 
 @pytest_asyncio.fixture
 async def client(app):
-    """HTTP-клиент FastAPI."""  # (я добавил)
-    transport = ASGITransport(app=app)  # (я добавил)
+    """HTTP-клиент FastAPI."""
+    transport = ASGITransport(app=app)
     async with AsyncClient(
         transport=transport,
         base_url="http://test",
@@ -104,7 +104,7 @@ async def client(app):
 
 @pytest.fixture(autouse=True)
 def disable_celery(monkeypatch):
-    """Отключаем Celery-задачи в тестах."""  # (я добавил)
+    """Отключаем Celery-задачи в тестах."""
     monkeypatch.setattr(
         "app.tasks.notifications.send_booking_created.delay",
         lambda *args, **kwargs: None,

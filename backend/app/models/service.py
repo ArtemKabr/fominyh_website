@@ -6,7 +6,7 @@ from app.core.database import Base
 
 
 class Service(Base):
-    """Услуга салона."""  # (я добавил)
+    """Услуга салона."""
 
     __tablename__ = "services"
 

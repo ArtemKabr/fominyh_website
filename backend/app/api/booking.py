@@ -24,10 +24,10 @@ router = APIRouter(
 @router.get("/free")
 async def schedule_free(
     day: date = Query(..., description="День в формате YYYY-MM-DD"),
-    service_id: int = Query(..., description="ID услуги"),  # (я добавил)
+    service_id: int = Query(..., description="ID услуги"),
     db: AsyncSession = Depends(get_db),
 ):
-    """Свободные слоты на день."""  # (я добавил)
+    """Свободные слоты на день."""
     slots = await get_free_slots(
         db=db,
         day=day,
@@ -49,12 +49,12 @@ async def booking_create(
     booking_in: BookingCreate,
     db: AsyncSession = Depends(get_db),
 ):
-    """Создание записи."""  # (я добавил)
+    """Создание записи."""
     booking = await create_booking(
         db=db,
         booking_in=booking_in,
     )
-    return booking  # (я добавил)
+    return booking
 
 
 @router.post(
@@ -66,9 +66,9 @@ async def booking_cancel(
     booking_id: int,
     db: AsyncSession = Depends(get_db),
 ):
-    """Отмена записи."""  # (я добавил)
+    """Отмена записи."""
     booking = await cancel_booking(
         db=db,
         booking_id=booking_id,
     )
-    return booking  # (я добавил)
+    return booking
