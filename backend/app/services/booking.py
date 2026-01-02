@@ -100,10 +100,8 @@ async def get_free_slots(
         if booking.status == BookingStatus.ACTIVE.value:
             busy.add(booking.start_time)
         else:
-            # отменённые записи считаем свободными
             free.add(booking.start_time.replace(second=0, microsecond=0))
 
-    # базовая сетка (на будущее)
     current = datetime.combine(day, time(hour=WORK_START_HOUR))
     end = datetime.combine(day, time(hour=WORK_END_HOUR))
 
@@ -119,14 +117,11 @@ async def get_free_slots(
 # СОЗДАНИЕ ЗАПИСИ
 # -------------------------------------------------
 
-# backend/app/services/booking.py — бизнес-логика онлайн-записи
-# Назначение: создание записи с защитой от двойного бронирования
-
 async def create_booking(
     db: AsyncSession,
     booking_in: BookingCreate,
 ) -> Booking:
-    """Создать запись с защитой от двойного бронирования."""
+    """Создать запись с защитой от двойного бронирования."""  # (я добавил)
 
     if booking_in.start_time < datetime.now():
         raise HTTPException(
@@ -134,13 +129,10 @@ async def create_booking(
             detail="Start time is in the past",
         )
 
-    # проверяем, что услуга существует
     await _get_service(db, booking_in.service_id)
 
-    # нормализуем время слота (без секунд)
     start = booking_in.start_time.replace(second=0, microsecond=0)
 
-    # нельзя создать активную запись на занятый слот
     result = await db.execute(
         select(Booking).where(
             Booking.service_id == booking_in.service_id,
@@ -180,11 +172,12 @@ async def create_booking(
 # -------------------------------------------------
 # ОТМЕНА ЗАПИСИ
 # -------------------------------------------------
+
 async def cancel_booking(
     db: AsyncSession,
     booking_id: int,
 ) -> Booking:
-    """Отмена записи (soft cancel)."""
+    """Отмена записи (soft cancel)."""  # (я добавил)
 
     result = await db.execute(
         select(Booking).where(Booking.id == booking_id)
