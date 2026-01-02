@@ -43,7 +43,6 @@ async def get_current_user(
     return user
 
 
-
 async def admin_required(
     user: User = Depends(get_current_user),
 ) -> User:
