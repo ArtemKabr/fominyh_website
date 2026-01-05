@@ -28,7 +28,8 @@ class BookingRead(BaseModel):
     id: int
     user_id: int
     service_id: int
-    start_time: datetime
+    start_time: datetime = Field(alias="start_at")  # (я добавил)
 
     class Config:
-        from_attributes = True
+        from_attributes = True  # (я добавил)
+        populate_by_name = True  # (я добавил)

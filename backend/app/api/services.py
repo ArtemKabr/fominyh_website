@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
+from app.core.database import get_async_session
 from app.schemas.service import ServiceCreate, ServiceRead
 from app.services.service import get_services, create_service
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/services", tags=["Services"])
     "",
     response_model=list[ServiceRead],
 )
-async def list_services(db: AsyncSession = Depends(get_db)):
+async def list_services(db: AsyncSession = Depends(get_async_session)):
     """Список услуг."""
     return await get_services(db)
 
@@ -26,7 +26,7 @@ async def list_services(db: AsyncSession = Depends(get_db)):
 )
 async def add_service(
     service_in: ServiceCreate,
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_async_session),
 ):
     """Создание услуги."""
     return await create_service(db, service_in)

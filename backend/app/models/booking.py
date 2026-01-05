@@ -6,29 +6,36 @@ from datetime import datetime
 from enum import Enum
 
 from sqlalchemy import DateTime, ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.user import User  # (я добавил)
 
 
 class BookingStatus(str, Enum):
-    """Статусы записи."""
+    """Статусы записи."""  # (я добавил)
 
     ACTIVE = "active"
     CANCELED = "canceled"
 
 
 class Booking(Base):
-    """Запись клиента на услугу."""
+    """Запись клиента на услугу."""  # (я добавил)
 
     __tablename__ = "bookings"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=True,
+    )  # (я добавил)
+
+    user: Mapped[User | None] = relationship("User")  # (я добавил)
+
     service_id: Mapped[int] = mapped_column(ForeignKey("services.id"))
 
-    start_time: Mapped[datetime] = mapped_column(DateTime)
+    start_at: Mapped[datetime] = mapped_column(DateTime)  # (я добавил)
 
     status: Mapped[str] = mapped_column(
         String(20),
