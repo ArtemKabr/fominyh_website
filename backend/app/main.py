@@ -1,5 +1,5 @@
 # backend/app/main.py — точка входа FastAPI
-# Назначение: инициализация роутов и корректный shutdown БД
+# Назначение: инициализация приложения и корректный shutdown БД
 
 from fastapi import FastAPI
 

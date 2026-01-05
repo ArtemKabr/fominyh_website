@@ -26,7 +26,7 @@ class SalonSettings(Base):
         default=20,
     )
 
-    slot_minutes: Mapped[int] = mapped_column(
+    interval_minutes: Mapped[int] = mapped_column(  # (я исправил)
         Integer,
         nullable=False,
         default=30,

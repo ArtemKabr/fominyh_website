@@ -21,9 +21,9 @@ async def get_salon_settings(db: AsyncSession) -> SalonSettings:
 async def update_salon_settings(
     db: AsyncSession,
     *,
-    work_start_time,
-    work_end_time,
-    slot_minutes: int,
+    work_start_hour: int,
+    work_end_hour: int,
+    interval_minutes: int,
 ) -> SalonSettings:
     """Обновить настройки салона."""  # (я добавил)
 
@@ -32,9 +32,9 @@ async def update_salon_settings(
     )
     settings = result.scalar_one()
 
-    settings.work_start_time = work_start_time
-    settings.work_end_time = work_end_time
-    settings.slot_minutes = slot_minutes
+    settings.work_start_hour = work_start_hour  # (я добавил)
+    settings.work_end_hour = work_end_hour      # (я добавил)
+    settings.interval_minutes = interval_minutes  # (я добавил)
 
     await db.commit()
     await db.refresh(settings)
