@@ -37,6 +37,8 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        env_prefix = ""          # (я добавил)
+        case_sensitive = False   # (я добавил)
         extra = "ignore"
 
 
