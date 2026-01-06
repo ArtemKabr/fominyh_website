@@ -1,12 +1,13 @@
 # backend/app/api/admin.py — админские эндпоинты (JWT + is_admin)
 
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_async_session
-from app.core.dependencies import admin_required
+from app.core.security import get_current_user
 from app.models.service import Service
 from app.models.booking import Booking
 from app.models.user import User
@@ -21,10 +22,13 @@ router = APIRouter(
 
 @router.get("/services")
 async def admin_list_services(
-    _: User = Depends(admin_required),
+    user: User = Depends(get_current_user),  # (я изменил)
     db: AsyncSession = Depends(get_async_session),
 ) -> list[dict]:
     """Список услуг (админ)."""  # (я добавил)
+
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Доступ запрещён")
 
     res = await db.execute(select(Service).order_by(Service.id))
     return [
@@ -33,7 +37,6 @@ async def admin_list_services(
             "name": s.name,
             "price": s.price,
             "duration_minutes": s.duration_minutes,
-            "is_active": getattr(s, "is_active", True),
         }
         for s in res.scalars().all()
     ]
@@ -42,10 +45,13 @@ async def admin_list_services(
 @router.post("/services", status_code=status.HTTP_201_CREATED)
 async def admin_create_service(
     payload: dict,
-    _: User = Depends(admin_required),
+    user: User = Depends(get_current_user),  # (я изменил)
     db: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Создание услуги (админ)."""  # (я добавил)
+
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Доступ запрещён")
 
     service = Service(**payload)
     db.add(service)
@@ -58,10 +64,13 @@ async def admin_create_service(
 async def admin_update_service(
     service_id: int,
     payload: dict,
-    _: User = Depends(admin_required),
+    user: User = Depends(get_current_user),  # (я изменил)
     db: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Обновление услуги (админ)."""  # (я добавил)
+
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Доступ запрещён")
 
     res = await db.execute(select(Service).where(Service.id == service_id))
     service = res.scalar_one_or_none()
@@ -79,10 +88,13 @@ async def admin_update_service(
 @router.delete("/services/{service_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def admin_delete_service(
     service_id: int,
-    _: User = Depends(admin_required),
+    user: User = Depends(get_current_user),  # (я изменил)
     db: AsyncSession = Depends(get_async_session),
 ) -> None:
     """Удаление услуги (админ)."""  # (я добавил)
+
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Доступ запрещён")
 
     await db.execute(delete(Service).where(Service.id == service_id))
     await db.commit()
@@ -93,13 +105,16 @@ async def admin_delete_service(
 
 @router.get("/bookings")
 async def admin_list_bookings(
-    _: User = Depends(admin_required),
+    user: User = Depends(get_current_user),  # (я изменил)
     date_from: datetime | None = Query(default=None),
     date_to: datetime | None = Query(default=None),
     service_id: int | None = Query(default=None),
     db: AsyncSession = Depends(get_async_session),
 ) -> list[dict]:
     """Список записей (админ)."""  # (я добавил)
+
+    if not user.is_admin:
+        raise HTTPException(status_code=403, detail="Доступ запрещён")
 
     stmt = select(Booking).order_by(Booking.id)
 

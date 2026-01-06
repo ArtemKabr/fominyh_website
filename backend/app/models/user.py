@@ -19,5 +19,8 @@ class User(Base):
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Auth
-    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)  # (я добавил)
+    password_hash: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,  # для клиентов без логина
+    )
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False)  # (я добавил)

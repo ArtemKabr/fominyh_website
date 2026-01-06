@@ -81,22 +81,25 @@ jobs:
           poetry install --with test
 
       - name: Wait for Postgres
-        run: sleep 5  
+        run: sleep 5
 
       - name: Run migrations
         working-directory: backend
         env:
+          DEBUG: "True"
+          SECRET_KEY: test-secret-key
           DB_HOST: localhost
           DB_PORT: 5432
           DB_NAME: test_db
           DB_USER: test
           DB_PASSWORD: test
-        run: alembic upgrade head  
+        run: alembic upgrade head
 
       - name: Run pytest
         working-directory: backend
         env:
           DEBUG: "True"
+          SECRET_KEY: test-secret-key
           DB_HOST: localhost
           DB_PORT: 5432
           DB_NAME: test_db
@@ -138,17 +141,16 @@ jobs:
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
             set -e
-          
+
             cd ~/FOMINYH_WEBSITE
-          
+
             echo "Update repository"
             git fetch origin
             git reset --hard origin/main
-          
+
             echo "Restart containers"
             docker compose down
             docker compose up -d --build
-          
+
             echo "Deploy completed"
           EOF
-          
