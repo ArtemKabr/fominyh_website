@@ -10,6 +10,11 @@ class Settings(BaseSettings):
     app_name: str = "FOMINYH WEBSITE"
     debug: bool = False
 
+    # Security / JWT
+    secret_key: str  # (я добавил)
+    jwt_algorithm: str = "HS256"  # (я добавил)
+    access_token_exp_minutes: int = 60 * 24  # (я добавил)
+
     # Database
     db_host: str
     db_port: int

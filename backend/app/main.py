@@ -1,7 +1,8 @@
 # backend/app/main.py — точка входа FastAPI
-# Назначение: инициализация приложения и корректный shutdown БД
+# Назначение: инициализация приложения, Swagger и корректный shutdown БД
 
 from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi  # (я добавил)
 
 from app.core.config import settings
 from app.core.database import shutdown_engine
@@ -11,7 +12,53 @@ from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.admin_settings import router as admin_settings_router
 
-app = FastAPI(title=settings.app_name)
+
+app = FastAPI(
+    title=settings.app_name,
+    description=(
+        "Авторизация:\n\n"
+        "В Swagger в поле **Authorize** вставляется **ТОЛЬКО JWT-токен**, "
+        "**без `Bearer`**.\n\n"
+        "Пример:\n"
+        "`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`"
+    ),
+)
+
+
+def custom_openapi():
+    """Кастомное описание OpenAPI для Swagger."""  # (я добавил)
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version="1.0.0",
+        description=app.description,
+        routes=app.routes,
+    )
+
+    openapi_schema.setdefault("components", {})
+    openapi_schema["components"]["securitySchemes"] = {
+        "JWT": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "Authorization",
+            "description": (
+                "Вставлять **ТОЛЬКО JWT-токен**, "
+                "**без `Bearer`**.\n\n"
+                "Пример:\n"
+                "`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`"
+            ),
+        }
+    }
+
+    openapi_schema["security"] = [{"JWT": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi  # (я добавил)
+
 
 app.include_router(services_router)
 app.include_router(booking_router)
