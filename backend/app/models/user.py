@@ -1,4 +1,5 @@
-# backend/app/models/user.py — модель пользователя (клиент + auth)
+# backend/app/models/user.py — модель пользователя
+# Назначение: хранение пользователей (простая auth)
 
 from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -7,20 +8,15 @@ from app.core.database import Base
 
 
 class User(Base):
-    """Пользователь системы (клиент салона + авторизация)."""  # (я добавил)
+    """Пользователь."""
 
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    # Клиентские данные
     name: Mapped[str] = mapped_column(String(100))
-    phone: Mapped[str] = mapped_column(String(20), unique=True)
-    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    phone: Mapped[str] = mapped_column(String(20))
+    email: Mapped[str] = mapped_column(String(255), unique=True)
+    password_hash: Mapped[str] = mapped_column(String(255))
 
-    # Auth
-    password_hash: Mapped[str | None] = mapped_column(
-        String(255),
-        nullable=True,  # для клиентов без логина
-    )
-    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)  # (я добавил)
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)

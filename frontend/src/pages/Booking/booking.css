@@ -1,0 +1,86 @@
+/* frontend/src/pages/Booking/booking.css */
+/* Назначение: стили страницы записи */
+
+.booking {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 120px 24px;
+}
+
+.booking__title {
+  font-size: 40px;
+  margin-bottom: 32px;
+}
+
+.booking__service {
+  margin-bottom: 40px;
+}
+
+.booking__service h2 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.booking__service p {
+  font-size: 18px;
+  opacity: 0.7;
+}
+
+.booking__block {
+  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.booking__block label {
+  font-size: 18px;
+}
+
+.booking__block input {
+  padding: 12px 16px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.2);
+}
+
+.booking__slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.booking__slot {
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.2);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.booking__slot:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+.booking__slot--active {
+  background: #d6b37c;
+  border-color: #d6b37c;
+}
+
+.booking__next {
+  margin-top: 40px;
+  font-size: 18px;
+  opacity: 0.7;
+}
+
+
+.booking__submit {
+  margin-top: 24px;
+  padding: 14px 32px;
+  border-radius: 999px;
+  border: none;
+  background: #d6b37c;
+  font-size: 16px;
+  cursor: pointer;
+}

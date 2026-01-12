@@ -1,5 +1,5 @@
-# backend/app/api/booking.py — эндпоинты онлайн-записи
-# Назначение: API-слой бронирования (тонкий, без логики)
+# backend/app/api/booking.py — API онлайн-записи
+# Назначение: HTTP-эндпоинты для работы с записями
 
 from datetime import date
 
@@ -10,10 +10,9 @@ from app.core.database import get_async_session
 from app.schemas.booking import BookingCreate, BookingRead
 from app.services.booking import (
     create_booking,
-    get_free_slots,
     cancel_booking,
+    get_free_slots,
 )
-
 
 router = APIRouter(
     prefix="/api/booking",

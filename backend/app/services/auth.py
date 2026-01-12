@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.passwords import verify_password
-from app.core.errors import AUTH_INVALID_CREDENTIALS, AUTH_FORBIDDEN  # (я добавил)
+from app.core.errors import AUTH_INVALID_CREDENTIALS, AUTH_FORBIDDEN  #
 from app.models.user import User
 
 
@@ -21,23 +21,21 @@ async def authenticate_admin(
     """
     Проверить email + password и is_admin.
     JWT здесь НЕ создаётся — только бизнес-проверка.
-    """  # (я добавил)
+    """  #
 
-    result = await db.execute(
-        select(User).where(User.email == email)
-    )  # (я добавил)
-    user = result.scalar_one_or_none()  # (я добавил)
+    result = await db.execute(select(User).where(User.email == email))  #
+    user = result.scalar_one_or_none()  #
 
     if not user or not verify_password(password, user.password_hash):
         raise HTTPException(
             status_code=401,
-            detail=AUTH_INVALID_CREDENTIALS,  # (я добавил)
-        )  # (я добавил)
+            detail=AUTH_INVALID_CREDENTIALS,  #
+        )  #
 
     if not user.is_admin:
         raise HTTPException(
             status_code=403,
-            detail=AUTH_FORBIDDEN,  # (я добавил)
-        )  # (я добавил)
+            detail=AUTH_FORBIDDEN,  #
+        )  #
 
-    return user  # (я добавил)
+    return user  #

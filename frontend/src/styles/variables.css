@@ -1,0 +1,8 @@
+:root {
+  --bg: #f7f4ef;
+  --text: #121212;
+  --muted: rgba(18, 18, 18, 0.72);
+  --primary: #c59d5f;
+  --card: #ffffff;
+  --border: rgba(0, 0, 0, 0.06);
+}

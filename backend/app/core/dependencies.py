@@ -10,7 +10,7 @@ from app.models.user import User
 async def admin_required(
     user: User = Depends(get_current_user),
 ) -> User:
-    """Доступ только для администратора."""  # (я добавил)
+    """Доступ только для администратора."""  #
 
     if not user.is_admin:
         raise HTTPException(

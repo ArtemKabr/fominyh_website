@@ -1,0 +1,129 @@
+/* frontend/src/components/services/service-card.css — карточка услуги
+   Поведение ИДЕНТИЧНО карточкам категорий */
+
+.service-card {
+  position: relative;
+  height: 360px;
+  border-radius: 24px;
+  overflow: hidden;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  cursor: pointer;
+
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.service-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+}
+
+/* затемнение — КАК У КАТЕГОРИЙ */
+.service-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.6),
+    rgba(0, 0, 0, 0.3),
+    rgba(0, 0, 0, 0.1)
+  );
+
+  z-index: 0;
+}
+
+/* контент */
+.service-card__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+
+  padding: 28px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  color: #ffffff;
+}
+
+/* ===== ЗАГОЛОВОК (ВСЕГДА ВИДЕН) ===== */
+.service-card__title {
+  margin: 0;
+  text-align: center;
+
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.25;
+
+  color: #ffffff;
+}
+
+/* ===== СКРЫТЫЙ БЛОК (КАК У КАТЕГОРИЙ) ===== */
+.service-card__desc,
+.service-card__meta,
+.service-card__btn {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+}
+
+/* ПОЯВЛЕНИЕ ПРИ HOVER — 1 В 1 */
+.service-card:hover .service-card__desc,
+.service-card:hover .service-card__meta,
+.service-card:hover .service-card__btn {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* описание */
+.service-card__desc {
+  margin-top: 14px;
+  font-size: 15px;
+  line-height: 1.45;
+  opacity: 0.9;
+}
+
+/* мета */
+.service-card__meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-top: 10px;
+  opacity: 0.85;
+}
+
+/* кнопка — КАК В КАТЕГОРИЯХ */
+.service-card__btn {
+  margin-top: 18px;
+  height: 46px;
+
+  border-radius: 999px;
+  border: none;
+
+  background: #e0b77a;
+  color: #ffffff;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  cursor: pointer;
+
+  transition: background 0.25s ease;
+}
+
+.service-card:hover .service-card__btn {
+  background: #d6aa63;
+}

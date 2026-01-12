@@ -1,0 +1,84 @@
+/* frontend/src/components/layout/Header/header.css — шапка поверх баннера */
+
+/* ===== HEADER ===== */
+.header {
+  position: absolute; /* поверх баннера */
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: transparent;
+  z-index: 10;
+}
+
+.header__inner {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  padding: 24px 16px 0; /* отступ сверху */
+  display: flex;
+  flex-direction: column; /* логотип + меню по вертикали */
+  align-items: center;
+}
+
+/* ===== BRAND / LOGO ===== */
+.header__brand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.header__logo {
+  width: 500px; /* нормальный размер */
+  max-width: 90vw;
+  height: auto;
+  display: block;
+}
+
+/* ===== NAV ===== */
+.header__nav {
+  display: flex;
+  gap: 48px;
+  margin-top: -12px; /* ПОДНЯТЬ меню под логотип */
+}
+
+.header__link {
+  text-decoration: none;
+  color: #ffffff;
+  font-weight: 500;
+  font-size: 16px;
+  opacity: 0.85;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+  transition: opacity 0.2s ease;
+}
+
+.header__link:hover {
+  opacity: 1;
+}
+
+.header__link.active {
+  opacity: 1;
+  font-weight: 600;
+}
+
+/* ===== HERO ===== */
+.hero {
+  height: 50vh;
+  background-image: url("/images/baner.png");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(0, 0, 0, 0.55),
+    rgba(0, 0, 0, 0.35)
+  );
+}
+
+/* ===== CONTENT BELOW ===== */
+.layout__content {
+  margin-top: 0;
+  padding: 48px 16px;
+}

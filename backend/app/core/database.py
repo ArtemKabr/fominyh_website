@@ -1,4 +1,5 @@
 # backend/app/core/database.py — подключение БД и зависимости
+# Назначение: создание AsyncEngine и async-сессий
 
 from typing import AsyncGenerator
 
@@ -22,7 +23,7 @@ _engine: AsyncEngine | None = None
 
 
 def get_engine() -> AsyncEngine:
-    """Получить AsyncEngine (единый для приложения и тестов)."""
+    """Единый AsyncEngine для всего проекта."""
     global _engine
     if _engine is None:
         _engine = create_async_engine(
@@ -32,24 +33,26 @@ def get_engine() -> AsyncEngine:
     return _engine
 
 
+# ❗ ВАЖНО: возвращаем async_session_maker
+async_session_maker = sessionmaker(  # ← КРИТИЧНО
+    bind=get_engine(),
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+
+
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Получение async-сессии БД."""
-    async_session_maker = sessionmaker(
-        bind=get_engine(),  # я добавил
-        class_=AsyncSession,  # я добавил
-        expire_on_commit=False,  # я добавил
-    )
+    """DI для FastAPI."""
     async with async_session_maker() as session:
         yield session
 
 
-# алиас для совместимости с зависимостями и тестами
-get_async_session = get_db  # я добавил
+get_async_session = get_db
 
 
 async def shutdown_engine() -> None:
-    """Корректное закрытие AsyncEngine при shutdown приложения."""
+    """Корректное закрытие engine."""
     global _engine
     if _engine is not None:
         await _engine.dispose()
-        _engine = None  # я добавил
+        _engine = None

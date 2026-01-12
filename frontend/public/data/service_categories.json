@@ -1,0 +1,20 @@
+[
+  {
+    "slug": "face",
+    "title": "Массаж лица",
+    "description": "Скульптинг, Гуаша, ультразвуковая чистка и профессиональный уход за кожей лица.",
+    "image": "/images/category-face.png"
+  },
+  {
+    "slug": "body",
+    "title": "Массаж тела",
+    "description": "Лимфодренажные, расслабляющие и восстанавливающие техники для тела.",
+    "image": "/images/category-body.png"
+  },
+  {
+    "slug": "complex",
+    "title": "Комплексный массаж",
+    "description": "Глубокая биоэнергетическая работа с телом для восстановления баланса и энергии.",
+    "image": "/images/category-complex.png"
+  }
+]

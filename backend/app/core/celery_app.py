@@ -1,29 +1,35 @@
-# backend/app/core/celery_app.py — конфигурация Celery и Beat
+# backend/app/core/celery_app.py — конфигурация Celery
+# Назначение: инициализация Celery (broker/backend), регистрация задач, beat
 
 from celery import Celery
 from celery.schedules import crontab
 
 from app.core.settings import settings
 
+
+BROKER_URL = settings.celery_broker_url or "redis://redis:6379/0"  #
+RESULT_BACKEND = settings.celery_result_backend or "redis://redis:6379/1"  #
+
+
 celery_app = Celery(
     "fominyh_backend",
-    broker=settings.celery_broker_url,
-    backend=settings.celery_result_backend,
+    broker=BROKER_URL,
+    backend=RESULT_BACKEND,
 )
 
-# Базовая конфигурация Celery
 celery_app.conf.update(
     timezone="Europe/Moscow",
     enable_utc=False,
 )
 
-# Celery Beat — периодические задачи
 celery_app.conf.beat_schedule = {
-    "check-bookings-reminders-every-5-minutes": {
+    "check-upcoming-bookings": {
         "task": "app.tasks.notifications.check_upcoming_bookings",
         "schedule": crontab(minute="*/5"),
     },
 }
 
-# ЯВНЫЙ импорт задач (обязательно)
-import app.tasks.notifications  # noqa: F401,E402
+# гарантируем регистрацию задач
+import app.tasks.notifications  # noqa: E402,F401
+
+__all__ = ["celery_app"]

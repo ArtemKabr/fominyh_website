@@ -1,29 +1,50 @@
 # backend/app/schemas/auth.py — схемы авторизации
+# Назначение: регистрация, логин, восстановление пароля
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class RegisterIn(BaseModel):
-    """Входные данные регистрации пользователя."""  # (я изменил)
-    name: str  # (я добавил)
-    phone: str  # (я добавил)
+    """Регистрация пользователя."""
+
+    name: str = Field(..., min_length=1)
+    phone: str
     email: EmailStr
-    password: str
+    password: str = Field(..., min_length=8)
 
 
 class LoginIn(BaseModel):
-    """Входные данные логина пользователя."""
+    """Логин пользователя."""
+
     email: EmailStr
     password: str
 
 
 class AdminLoginIn(BaseModel):
-    """Входные данные логина администратора."""  # (я добавил)
+    """Логин администратора."""
+
     email: EmailStr
     password: str
 
 
 class TokenOut(BaseModel):
-    """Ответ с JWT токеном."""
+    """JWT токен."""
+
     access_token: str
-    token_type: str = "bearer"
+    token_type: str
+
+
+# ===== ВОССТАНОВЛЕНИЕ ПАРОЛЯ =====
+
+
+class ForgotPasswordIn(BaseModel):
+    """Запрос сброса пароля."""
+
+    email: EmailStr
+
+
+class ResetPasswordIn(BaseModel):
+    """Сброс пароля по токену."""
+
+    token: str
+    new_password: str = Field(..., min_length=8)

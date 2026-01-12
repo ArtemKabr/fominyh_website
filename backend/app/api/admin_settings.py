@@ -25,11 +25,9 @@ async def get_salon_settings(
     _: User = Depends(admin_required),
     db: AsyncSession = Depends(get_async_session),
 ) -> SalonSettingsOut:
-    """Получить настройки салона."""  # (я добавил)
+    """Получить настройки салона."""  #
 
-    res = await db.execute(
-        select(SalonSettings).where(SalonSettings.id == 1)
-    )
+    res = await db.execute(select(SalonSettings).where(SalonSettings.id == 1))
     settings = res.scalar_one_or_none()
 
     if not settings:
@@ -47,11 +45,9 @@ async def update_salon_settings(
     _: User = Depends(admin_required),
     db: AsyncSession = Depends(get_async_session),
 ) -> SalonSettingsOut:
-    """Обновить настройки салона."""  # (я добавил)
+    """Обновить настройки салона."""  #
 
-    res = await db.execute(
-        select(SalonSettings).where(SalonSettings.id == 1)
-    )
+    res = await db.execute(select(SalonSettings).where(SalonSettings.id == 1))
     settings = res.scalar_one_or_none()
 
     if not settings:
