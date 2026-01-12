@@ -1,5 +1,5 @@
 # backend/alembic/versions/40c886012c21_update_user_model.py
-# Назначение: добавление полей name и phone в таблицу users
+# Назначение: добавление флага администратора пользователю
 
 """update user model
 
@@ -21,35 +21,17 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Upgrade schema.
-
-    Добавляет поля name и phone в таблицу users.
-    Другие таблицы и ограничения НЕ затрагиваются.
-    """
     op.add_column(
         "users",
         sa.Column(
-            "name",
-            sa.String(length=100),
+            "is_admin",
+            sa.Boolean(),
             nullable=False,
-            server_default="",
+            server_default=sa.false(),
         ),
-    )
-    op.add_column(
-        "users",
-        sa.Column(
-            "phone",
-            sa.String(length=20),
-            nullable=False,
-            server_default="",
-        ),
-    )
+    )  # (я оставил)
 
 
 def downgrade() -> None:
-    """Downgrade schema.
-
-    Удаляет поля name и phone из таблицы users.
-    """
-    op.drop_column("users", "phone")
-    op.drop_column("users", "name")
+    """Откат добавления флага администратора."""
+    op.drop_column("users", "is_admin")  # (я исправил)
