@@ -1,4 +1,4 @@
-# backend/app/models/booking.py — модель записи
+# backend/app/models/booking.py — модель записи (исправление поля времени)
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ class Booking(Base):
 
     service_id: Mapped[int] = mapped_column(ForeignKey("services.id"))
 
-    start_at: Mapped[datetime] = mapped_column(DateTime)  # (я добавил)
+    start_time: Mapped[datetime] = mapped_column(DateTime)  # (я изменил)
 
     status: Mapped[str] = mapped_column(
         String(20),

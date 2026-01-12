@@ -15,14 +15,14 @@ from app.core.database import get_async_session
 from app.models.user import User
 from app.core.errors import AUTH_FORBIDDEN
 
-bearer_scheme = HTTPBearer(auto_error=False)  # (я добавил)
+bearer_scheme = HTTPBearer(auto_error=False)  #
 
 
 def create_access_token(
     subject: int,
     expires_delta: timedelta | None = None,
 ) -> str:
-    """Создать JWT access token."""  # (я добавил)
+    """Создать JWT access token."""  #
 
     now = datetime.now(timezone.utc)
 
@@ -49,7 +49,7 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     db: AsyncSession = Depends(get_async_session),
 ) -> User:
-    """Получить пользователя из JWT."""  # (я добавил)
+    """Получить пользователя из JWT."""  #
 
     if credentials is None:
         raise HTTPException(
@@ -90,7 +90,7 @@ async def get_current_user(
 async def admin_required(
     user: User = Depends(get_current_user),
 ) -> User:
-    """Проверка прав администратора."""  # (я добавил)
+    """Проверка прав администратора."""  #
 
     if not user.is_admin:
         raise HTTPException(

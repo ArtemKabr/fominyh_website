@@ -1,16 +1,21 @@
 # backend/app/models/service.py — модель услуги
-from sqlalchemy import String, Integer
+from sqlalchemy import String, Integer, Text, JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
 
 
 class Service(Base):
-    """Услуга салона."""
+    """Модель услуги."""
 
     __tablename__ = "services"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(100))
-    price: Mapped[int] = mapped_column(Integer)
-    duration_minutes: Mapped[int] = mapped_column(Integer)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    category: Mapped[str] = mapped_column(String(50), nullable=False)  # (я добавил)
+    description: Mapped[str | None] = mapped_column(Text)  # (я добавил)
+    price: Mapped[int] = mapped_column(Integer, nullable=False)
+    duration_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
+    image: Mapped[str | None] = mapped_column(String(255))  # (я добавил)
+    benefits: Mapped[list[str] | None] = mapped_column(JSON)  # (я добавил)

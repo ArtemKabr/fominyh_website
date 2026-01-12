@@ -1,25 +1,25 @@
-# backend/app/schemas/service.py — pydantic-схемы услуг
+# backend/app/schemas/service.py — схемы услуг (совместимость с тестами)
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ServiceBase(BaseModel):
-    """Базовая схема услуги."""
+    """Базовые поля услуги."""  # (я добавил)
 
     name: str
     price: int
-    duration_minutes: int
+    duration_minutes: int = Field(..., ge=1)  # (я добавил)
 
 
 class ServiceCreate(ServiceBase):
-    """Схема создания услуги."""
-    pass
+    """Создание услуги."""  # (я добавил)
+
+    model_config = ConfigDict(extra="forbid")  # (я добавил)
 
 
 class ServiceRead(ServiceBase):
-    """Схема чтения услуги."""
+    """Чтение услуги."""  # (я добавил)
 
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)  # (я добавил)

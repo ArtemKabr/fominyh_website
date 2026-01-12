@@ -1,0 +1,128 @@
+/* frontend/src/pages/ServiceDetail/service-detail.css — страница услуги */
+
+.service-detail {
+  min-height: calc(100vh - 120px);
+  padding: 80px 16px;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  /* 🔥 ПЛАВНОЕ ПОЯВЛЕНИЕ ФОНА */
+  animation: service-bg-fade 0.6s ease both;
+}
+
+/* затемнение фона — глубже и мягче */
+.service-detail::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.45),
+    rgba(0, 0, 0, 0.55)
+  );
+
+  z-index: 0;
+}
+
+/* анимация появления */
+@keyframes service-bg-fade {
+  from {
+    opacity: 0;
+    transform: scale(1.02);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* контент поверх фона */
+.service-detail__overlay {
+  position: relative;
+  z-index: 1;
+
+  width: min(820px, 100%);
+  padding: 48px;
+
+  /* ВОТ ЭТА СТРОКА — КЛЮЧ */
+  color: #ffffff; /* ← ЦВЕТ ВСЕГО ТЕКСТА НА ПЛАШКЕ */
+
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(14px);
+
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+
+
+/* заголовок */
+.service-detail__title {
+  text-align: center;
+  font-size: 34px;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+
+/* описание */
+.service-detail__description {
+  line-height: 1.65;
+  margin-bottom: 24px;
+  font-size: 16px;
+}
+
+/* список преимуществ */
+.service-detail__benefits {
+  margin-bottom: 28px;
+  padding-left: 20px;
+}
+
+.service-detail__benefits li {
+  margin-bottom: 10px;
+}
+
+/* мета */
+.service-detail__meta {
+  display: flex;
+  gap: 24px;
+  font-size: 16px;
+  margin-bottom: 36px;
+}
+
+/* кнопка */
+.service-detail__btn {
+  padding: 14px 36px;
+  border-radius: 999px;
+  border: none;
+
+  background: linear-gradient(
+    135deg,
+    #c8a36a,
+    #e2c18b
+  );
+
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+
+  box-shadow: 0 8px 22px rgba(194, 156, 100, 0.45);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    filter 0.25s ease;
+}
+
+.service-detail__btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(200, 163, 106, 0.6);
+  filter: brightness(1.05);
+}

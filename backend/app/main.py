@@ -2,7 +2,7 @@
 # Назначение: инициализация приложения, Swagger и корректный shutdown БД
 
 from fastapi import FastAPI
-from fastapi.openapi.utils import get_openapi  # (я добавил)
+from fastapi.openapi.utils import get_openapi  #
 
 from app.core.config import settings
 from app.core.database import shutdown_engine
@@ -26,7 +26,7 @@ app = FastAPI(
 
 
 def custom_openapi():
-    """Кастомное описание OpenAPI для Swagger."""  # (я добавил)
+    """Swagger с HTTP Bearer JWT."""  #
     if app.openapi_schema:
         return app.openapi_schema
 
@@ -39,25 +39,20 @@ def custom_openapi():
 
     openapi_schema.setdefault("components", {})
     openapi_schema["components"]["securitySchemes"] = {
-        "JWT": {
-            "type": "apiKey",
-            "in": "header",
-            "name": "Authorization",
-            "description": (
-                "Вставлять **ТОЛЬКО JWT-токен**, "
-                "**без `Bearer`**.\n\n"
-                "Пример:\n"
-                "`eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`"
-            ),
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Вставлять ТОЛЬКО JWT, без Bearer",  #
         }
     }
 
-    openapi_schema["security"] = [{"JWT": []}]
+    openapi_schema["security"] = [{"BearerAuth": []}]
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
 
-app.openapi = custom_openapi  # (я добавил)
+app.openapi = custom_openapi  #
 
 
 app.include_router(services_router)

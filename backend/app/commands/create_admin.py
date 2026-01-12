@@ -1,49 +1,55 @@
-# backend/app/commands/create_admin.py — создание администратора через CLI
+# backend/app/commands/create_admin.py
+# Команда создания / повышения администратора
 
 import asyncio
 import getpass
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import select
 
 from app.core.database import get_engine
 from app.core.passwords import hash_password
 from app.models.user import User
 
 
-async def main() -> None:
-    engine = get_engine()
+ADMIN_PHONE = "+70000000000"
+ADMIN_EMAIL = "admin@test.ru"
 
-    async_session_maker = sessionmaker(
-        bind=engine,
+
+async def main() -> None:
+    """Создать или обновить администратора."""  #
+
+    password = getpass.getpass("Введите пароль администратора: ")
+
+    engine = get_engine()
+    session_maker = sessionmaker(
+        engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )
 
-    async with async_session_maker() as session:
-        # проверяем, есть ли уже администратор
-        result = await session.execute(
-            select(User).where(User.is_admin.is_(True))
-        )
-        if result.scalar_one_or_none():
-            print("Администратор уже существует")
-            return
+    async with session_maker() as session:
+        result = await session.execute(select(User).where(User.phone == ADMIN_PHONE))
+        user = result.scalar_one_or_none()
 
-        password = getpass.getpass("Введите пароль администратора: ")
+        if user:
+            user.email = ADMIN_EMAIL
+            user.password_hash = hash_password(password)
+            user.is_admin = True
+            print("Администратор обновлён")  #
+        else:
+            user = User(
+                name="Admin",
+                phone=ADMIN_PHONE,
+                email=ADMIN_EMAIL,
+                password_hash=hash_password(password),
+                is_admin=True,
+            )
+            session.add(user)
+            print("Администратор создан")  #
 
-        admin = User(
-            name="Admin",
-            phone="+70000000000",
-            email="admin@example.com",
-            password_hash=hash_password(password),  # я добавил
-            is_admin=True,
-        )
-
-        session.add(admin)
         await session.commit()
-
-        print("Администратор создан")
 
 
 if __name__ == "__main__":

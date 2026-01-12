@@ -14,16 +14,14 @@ from app.models.user import User
 from app.schemas.booking import BookingCreate
 
 
-WORK_START_HOUR = 10  # начало рабочего дня (я добавил)
-WORK_END_HOUR = 20    # конец рабочего дня (я добавил)
-SLOT_MINUTES = 30     # шаг сетки слотов (я добавил)
+WORK_START_HOUR = 10  # начало рабочего дня
+WORK_END_HOUR = 20  # конец рабочего дня
+SLOT_MINUTES = 30  # шаг сетки слотов
 
 
 async def _get_service(db: AsyncSession, service_id: int) -> Service:
     """Получить услугу или выбросить 404."""
-    result = await db.execute(
-        select(Service).where(Service.id == service_id)
-    )
+    result = await db.execute(select(Service).where(Service.id == service_id))
     service = result.scalar_one_or_none()
 
     if service is None:
@@ -42,9 +40,7 @@ async def _get_or_create_user(
     email: str | None,
 ) -> User:
     """Получить пользователя по телефону или создать нового."""
-    result = await db.execute(
-        select(User).where(User.phone == phone)
-    )
+    result = await db.execute(select(User).where(User.phone == phone))
     user = result.scalar_one_or_none()
 
     if user is not None:
@@ -56,7 +52,7 @@ async def _get_or_create_user(
         email=email,
     )
     db.add(user)
-    await db.flush()  # получаем user.id без commit (я добавил)
+    await db.flush()  # получаем user.id без commit
 
     return user
 
@@ -74,12 +70,8 @@ async def get_free_slots(
         service = await _get_service(db, service_id)
         service_duration = timedelta(minutes=service.duration_minutes)
 
-    day_start = datetime.combine(
-        day, time(hour=WORK_START_HOUR, minute=0)
-    )
-    day_end = datetime.combine(
-        day, time(hour=WORK_END_HOUR, minute=0)
-    )
+    day_start = datetime.combine(day, time(hour=WORK_START_HOUR, minute=0))
+    day_end = datetime.combine(day, time(hour=WORK_END_HOUR, minute=0))
 
     # получаем все записи с их услугами на этот день
     result = await db.execute(
@@ -113,7 +105,7 @@ async def get_free_slots(
             if not overlap:
                 slots.append(current)
 
-        current += timedelta(minutes=SLOT_MINUTES)  # шаг сетки (я добавил)
+        current += timedelta(minutes=SLOT_MINUTES)  # шаг сетки
 
     return slots
 

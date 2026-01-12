@@ -1,39 +1,49 @@
-# backend/tests/test_booking_create.py — тест создания записи (API)
-
+# backend/tests/test_booking_create.py — создание записи
+from datetime import datetime, timedelta
 import pytest
 
 
 @pytest.mark.asyncio
-async def test_create_booking(client, monkeypatch):
-    """Создание записи через API."""
+async def test_create_booking_ok(client):
+    start = (datetime.now() + timedelta(hours=1)).isoformat()
 
-    async def fake_create_booking(*, db, booking_in):
-        return {
-            "id": 1,
-            "user_id": 1,
-            "service_id": booking_in.service_id,
-            "start_time": booking_in.start_time,
-        }
+    r = await client.post(
+        "/api/booking",
+        json={
+            "service_id": 1,
+            "start_time": start,
+            "user_name": "Ivan",
+            "phone": "+79991111111",
+            "email": "ivan@test.ru",
+        },
+    )
+    assert r.status_code == 201
+    assert r.json()["service_id"] == 1
 
-    # ⚠️ МОКАЕМ ИМЕННО ТО МЕСТО, ОТКУДА ВЫЗЫВАЮТ
-    monkeypatch.setattr(
-        "app.api.booking.create_booking",
-        fake_create_booking,
+
+@pytest.mark.asyncio
+async def test_create_booking_overlap(client):
+    start = (datetime.now() + timedelta(hours=1)).isoformat()
+
+    await client.post(
+        "/api/booking",
+        json={
+            "service_id": 1,
+            "start_time": start,
+            "user_name": "Ivan",
+            "phone": "+79992222222",
+            "email": "ivan2@test.ru",
+        },
     )
 
-    payload = {
-        "service_id": 1,
-        "start_time": "2025-01-10T12:00:00",
-        "user_name": "Иван",
-        "phone": "+79990000000",
-        "email": "test@mail.ru",
-    }
-
-    response = await client.post("/api/booking", json=payload)
-
-    assert response.status_code == 201
-
-    data = response.json()
-    assert data["id"] == 1
-    assert data["user_id"] == 1
-    assert data["service_id"] == 1
+    r = await client.post(
+        "/api/booking",
+        json={
+            "service_id": 1,
+            "start_time": start,
+            "user_name": "Petr",
+            "phone": "+79993333333",
+            "email": "petr@test.ru",
+        },
+    )
+    assert r.status_code == 409

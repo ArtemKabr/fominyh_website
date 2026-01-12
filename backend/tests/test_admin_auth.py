@@ -1,36 +1,35 @@
-# backend/tests/test_admin_auth.py — тесты логина и ролей
+# backend/tests/test_admin_auth.py — тесты упрощённой авторизации
 
 import pytest
 
 
 @pytest.mark.asyncio
-async def test_admin_login_ok(async_client, admin_user):
-    """Администратор может залогиниться."""  # (я добавил)
-    resp = await async_client.post(
-        "/api/auth/login",
+async def test_register_ok(client):
+    r = await client.post(
+        "/api/auth/register",
         json={
-            "email": admin_user.email,        # (я изменил)
-            "password": "admin_password",
+            "name": "Test",
+            "phone": "+79990000000",
+            "email": "test@test.ru",
+            "password": "12345678",
         },
     )
-    assert resp.status_code == 200
-
-    data = resp.json()
-    assert "access_token" in data
-    assert data["token_type"] == "bearer"
+    assert r.status_code == 201
+    data = r.json()
+    assert "id" in data
+    assert data["email"] == "test@test.ru"
 
 
 @pytest.mark.asyncio
-async def test_user_login_ok(async_client, regular_user):
-    """Обычный пользователь может залогиниться, но не админ."""  # (я добавил)
-    resp = await async_client.post(
+async def test_login_ok(client):
+    r = await client.post(
         "/api/auth/login",
         json={
-            "email": regular_user.email,      # (я изменил)
-            "password": "user_password",
+            "email": "test@test.ru",
+            "password": "12345678",
         },
     )
-    assert resp.status_code == 200
-
-    data = resp.json()
-    assert "access_token" in data
+    assert r.status_code == 200
+    data = r.json()
+    assert data["email"] == "test@test.ru"
+    assert data["is_admin"] is False
