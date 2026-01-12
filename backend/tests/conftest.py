@@ -4,50 +4,45 @@
 import sys
 from pathlib import Path
 
-# -------------------------------------------------
-# PYTHONPATH (ОБЯЗАТЕЛЬНО В САМОМ ВЕРХУ)
-# -------------------------------------------------
 BASE_DIR = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(BASE_DIR))  # (я добавил)
+sys.path.insert(0, str(BASE_DIR))  # noqa: E402  # (я добавил)
 
-# -------------------------------------------------
-# ДАЛЬШЕ — ОБЫЧНЫЕ ИМПОРТЫ
-# -------------------------------------------------
-import asyncio
-import pytest
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import select
+import asyncio  # noqa: E402
+import pytest  # noqa: E402
+from httpx import AsyncClient  # noqa: E402
+from sqlalchemy import select  # noqa: E402
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
+from sqlalchemy.orm import sessionmaker  # noqa: E402
 
-from app.main import app
-from app.core.database import Base, get_async_session
-from app.core.settings import settings
+from app.main import app  # noqa: E402
+from app.core.database import Base, get_async_session  # noqa: E402
+from app.core.settings import settings  # noqa: E402
 
 
-# -------------------------------------------------
-# TEST CONFIG
-# -------------------------------------------------
 settings.testing = True  # (я добавил)
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"  # (я добавил)
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
 @pytest.fixture(scope="session")
 def event_loop():
-    loop = asyncio.new_event_loop()  # (я добавил)
+    loop = asyncio.new_event_loop()
     yield loop
-    loop.close()  # (я добавил)
+    loop.close()
 
 
 @pytest.fixture(scope="session")
 async def engine():
     engine = create_async_engine(TEST_DATABASE_URL)
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
     yield engine
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
+
     await engine.dispose()
 
 
@@ -58,6 +53,7 @@ async def db(engine):
         class_=AsyncSession,
         expire_on_commit=False,
     )
+
     async with async_session() as session:
         yield session
 
@@ -96,4 +92,5 @@ async def seed_service(db):
     db.add(service)
     await db.commit()
     await db.refresh(service)
+
     return service
