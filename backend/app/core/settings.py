@@ -33,8 +33,8 @@ class Settings(BaseSettings):
     # --------------------
     # Celery / Redis
     # --------------------
-    celery_broker_url: str
-    celery_result_backend: str
+    celery_broker_url: str | None = None  # (я добавил)
+    celery_result_backend: str | None = None  # (я добавил)
 
     # --------------------
     # Telegram
@@ -75,6 +75,11 @@ class Settings(BaseSettings):
                 self.smtp_from,
             ]
         )
+
+    @property
+    def celery_enabled(self) -> bool:
+        """Включён ли Celery."""  # (я добавил)
+        return bool(self.celery_broker_url and self.celery_result_backend)  # (я добавил)
 
     class Config:
         env_file = ".env"
