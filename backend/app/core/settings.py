@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     # --------------------
     app_name: str = "FOMINYH WEBSITE"
     debug: bool = False
-    testing: bool = False  # (я добавил)
+    testing: bool = False  # 
 
     # --------------------
     # Security / JWT
@@ -33,14 +33,14 @@ class Settings(BaseSettings):
     # --------------------
     # Redis  ← ВОТ ЭТОГО НЕ ХВАТАЛО
     # --------------------
-    redis_host: str = "redis"     # (я добавил)
-    redis_port: int = 6379        # (я добавил)
+    redis_host: str = "redis"     # 
+    redis_port: int = 6379        # 
 
     # --------------------
     # Celery / Redis
     # --------------------
-    celery_broker_url: str | None = None  # (я добавил)
-    celery_result_backend: str | None = None  # (я добавил)
+    celery_broker_url: str | None = None  # 
+    celery_result_backend: str | None = None  # 
 
     # --------------------
     # Telegram
@@ -84,8 +84,8 @@ class Settings(BaseSettings):
 
     @property
     def celery_enabled(self) -> bool:
-        """Включён ли Celery."""  # (я добавил)
-        return bool(self.celery_broker_url and self.celery_result_backend)  # (я добавил)
+        """Включён ли Celery."""  # 
+        return bool(self.celery_broker_url and self.celery_result_backend)  # 
 
     class Config:
         env_file = ".env"

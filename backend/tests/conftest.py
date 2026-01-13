@@ -16,7 +16,7 @@ from app.core.settings import settings
 # -------------------------------------------------
 # ВАЖНО: включаем режим тестов ДО импорта app
 # -------------------------------------------------
-settings.testing = True  # (я добавил)
+settings.testing = True  # 
 
 from app.main import app  # noqa: E402
 from app.core.database import Base, get_async_session  # noqa: E402
@@ -26,7 +26,7 @@ from app.core.database import Base, get_async_session  # noqa: E402
 # Заглушка Redis
 # -------------------------------------------------
 class DummyRedis:
-    """Заглушка Redis для тестов."""  # (я добавил)
+    """Заглушка Redis для тестов."""  # 
 
     async def get(self, *args, **kwargs):
         return None
@@ -43,7 +43,7 @@ class DummyRedis:
 
 @pytest.fixture(autouse=True)
 def disable_redis(monkeypatch):
-    """Отключает Redis во всех тестах."""  # (я добавил)
+    """Отключает Redis во всех тестах."""  # 
     monkeypatch.setattr(
         "app.core.redis.redis",
         DummyRedis(),
@@ -53,7 +53,7 @@ def disable_redis(monkeypatch):
 # -------------------------------------------------
 # Тестовая БД (SQLite in-memory)
 # -------------------------------------------------
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"  # (я добавил)
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"  # 
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -97,7 +97,7 @@ async def client(db):
 # -------------------------------------------------
 @pytest_asyncio.fixture(autouse=True)
 async def seed_service(db):
-    """Создаёт базовую услугу для тестов."""  # (я добавил)
+    """Создаёт базовую услугу для тестов."""  # 
     from app.models.service import Service
 
     result = await db.execute(

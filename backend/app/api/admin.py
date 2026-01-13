@@ -11,7 +11,7 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 
 async def get_admin(user_id: int, db: AsyncSession) -> User:
-    """Проверка прав администратора."""  # (я добавил)
+    """Проверка прав администратора."""  # 
 
     res = await db.execute(select(User).where(User.id == user_id))
     user = res.scalar_one_or_none()

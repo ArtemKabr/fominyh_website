@@ -10,14 +10,14 @@ from app.core.database import get_async_session
 
 
 async def init_services_if_empty() -> None:
-    """Загрузить услуги, если таблица существует и пуста."""  # (я добавил)
+    """Загрузить услуги, если таблица существует и пуста."""  # 
 
     async for db in get_async_session():
         try:
-            # проверяем, что таблица services существует  # (я добавил)
+            # проверяем, что таблица services существует  # 
             await db.execute(text("SELECT 1 FROM services LIMIT 1"))
         except ProgrammingError:
-            # таблицы ещё нет — alembic не отработал  # (я добавил)
+            # таблицы ещё нет — alembic не отработал  # 
             return
 
         result = await db.execute(select(Service.id).limit(1))
@@ -26,4 +26,4 @@ async def init_services_if_empty() -> None:
         if exists:
             return
 
-        await load_services(db)  # (я добавил)
+        await load_services(db)  # 

@@ -20,7 +20,7 @@ async def register(
 ):
     """Регистрация пользователя."""
 
-    if not data.name or not data.phone:  # (я добавил)
+    if not data.name or not data.phone:  # 
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="name и phone обязательны",

@@ -13,19 +13,19 @@ from app.core.database import async_session_maker  # для CLI запуска
 
 DATA_PATH = (
     Path(__file__).resolve().parent.parent / "data" / "services_db.json"
-)  # (я добавил)
+)  # 
 
 
 async def load_services(db: AsyncSession) -> None:
-    """Загрузка услуг в базу данных."""  # (я добавил)
+    """Загрузка услуг в базу данных."""  # 
 
     if not DATA_PATH.exists():
-        raise FileNotFoundError(f"Файл не найден: {DATA_PATH}")  # (я добавил)
+        raise FileNotFoundError(f"Файл не найден: {DATA_PATH}")  # 
 
     data = json.loads(DATA_PATH.read_text(encoding="utf-8"))
 
     for item in data:
-        # проверяем по slug, а не по id  # (я добавил)
+        # проверяем по slug, а не по id  # 
         res = await db.execute(
             select(Service).where(Service.slug == item["slug"])
         )
@@ -41,7 +41,7 @@ async def load_services(db: AsyncSession) -> None:
             description=item["description"],
             price=item["price"],
             duration_minutes=item.get("duration")
-            or item.get("duration_minutes"),  # (я добавил)
+            or item.get("duration_minutes"),  # 
             image=item.get("image"),
             benefits=item.get("benefits"),
         )
@@ -53,7 +53,7 @@ async def load_services(db: AsyncSession) -> None:
 
 # --- CLI запуск (оставляем) ---
 
-async def _run_cli() -> None:  # (я добавил)
+async def _run_cli() -> None:  # 
     async with async_session_maker() as session:
         await load_services(session)
 

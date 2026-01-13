@@ -23,10 +23,10 @@ export function Booking() {
   const [slots, setSlots] = useState<string[]>([]);
   const [selectedSlot, setSelectedSlot] = useState("");
 
-  const [name, setName] = useState(""); // (я добавил)
-  const [phone, setPhone] = useState(""); // (я добавил)
-  const [submitting, setSubmitting] = useState(false); // (я добавил)
-  const [success, setSuccess] = useState(false); // (я добавил)
+  const [name, setName] = useState(""); // 
+  const [phone, setPhone] = useState(""); // 
+  const [submitting, setSubmitting] = useState(false); // 
+  const [success, setSuccess] = useState(false); // 
 
   /* ============================================================
      Загрузка услуги

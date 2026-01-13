@@ -2,13 +2,13 @@
 # Назначение: HTTP-эндпоинты для работы с записями
 
 from datetime import date
-import json  # (я добавил)
+import json  # 
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_async_session
-from app.core.redis import redis  # (я добавил)
+from app.core.redis import redis  # 
 from app.schemas.booking import BookingCreate, BookingRead
 from app.services.booking import (
     create_booking,
@@ -28,13 +28,13 @@ async def schedule_free(
     service_id: int = Query(..., description="ID услуги"),
     db: AsyncSession = Depends(get_async_session),
 ):
-    """Свободные слоты на день."""  # (я добавил)
+    """Свободные слоты на день."""  # 
 
-    cache_key = f"free_slots:{day}:{service_id}"  # (я добавил)
-    cached = await redis.get(cache_key)  # (я добавил)
+    cache_key = f"free_slots:{day}:{service_id}"  # 
+    cached = await redis.get(cache_key)  # 
 
     if cached:
-        return json.loads(cached)  # (я добавил)
+        return json.loads(cached)  # 
 
     slots = await get_free_slots(
         db=db,
@@ -46,9 +46,9 @@ async def schedule_free(
         "day": str(day),
         "service_id": service_id,
         "slots": [s.isoformat() for s in slots],
-    }  # (я добавил)
+    }  # 
 
-    await redis.set(cache_key, json.dumps(data), ex=60)  # 1 минута (я добавил)
+    await redis.set(cache_key, json.dumps(data), ex=60)  # 1 минута 
     return data
 
 
@@ -61,7 +61,7 @@ async def booking_create(
     booking_in: BookingCreate,
     db: AsyncSession = Depends(get_async_session),
 ):
-    """Создание записи."""  # (я добавил)
+    """Создание записи."""  # 
 
     booking = await create_booking(
         db=db,
@@ -80,7 +80,7 @@ async def booking_cancel(
     booking_id: int,
     db: AsyncSession = Depends(get_async_session),
 ):
-    """Отмена записи."""  # (я добавил)
+    """Отмена записи."""  # 
 
     booking = await cancel_booking(
         db=db,

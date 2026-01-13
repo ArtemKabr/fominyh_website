@@ -1,18 +1,18 @@
 # backend/app/api/services.py — эндпоинты услуг
 # Назначение: публичное API услуг
 
-from fastapi import APIRouter, Depends, status, HTTPException  # (я добавил)
+from fastapi import APIRouter, Depends, status, HTTPException  # 
 from sqlalchemy.ext.asyncio import AsyncSession
-import json  # (я добавил)
+import json  # 
 
 from app.core.database import get_async_session
 from app.schemas.service import ServiceCreate, ServiceRead
 from app.services.service import (
     get_services,
     create_service,
-    get_service_by_slug,  # (я добавил)
+    get_service_by_slug,  # 
 )
-from app.core.redis import redis  # (я добавил)
+from app.core.redis import redis  # 
 
 router = APIRouter(
     prefix="/api/services",
@@ -27,18 +27,18 @@ router = APIRouter(
 async def list_services(
     db: AsyncSession = Depends(get_async_session),
 ):
-    """Список услуг."""  # (я добавил)
+    """Список услуг."""  # 
 
-    cache_key = "services:list"  # (я добавил)
-    cached = await redis.get(cache_key)  # (я добавил)
+    cache_key = "services:list"  # 
+    cached = await redis.get(cache_key)  # 
 
     if cached:
-        return json.loads(cached)  # (я добавил)
+        return json.loads(cached)  # 
 
     services = await get_services(db)
-    data = [ServiceRead.model_validate(s).model_dump() for s in services]  # (я добавил)
+    data = [ServiceRead.model_validate(s).model_dump() for s in services]  # 
 
-    await redis.set(cache_key, json.dumps(data), ex=300)  # 5 минут (я добавил)
+    await redis.set(cache_key, json.dumps(data), ex=300)  # 5 минут 
     return data
 
 
@@ -50,7 +50,7 @@ async def get_service_by_slug_api(
     slug: str,
     db: AsyncSession = Depends(get_async_session),
 ) -> ServiceRead:
-    """Получить услугу по slug."""  # (я добавил)
+    """Получить услугу по slug."""  # 
 
     service = await get_service_by_slug(db, slug)
     if not service:
@@ -58,7 +58,7 @@ async def get_service_by_slug_api(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Услуга не найдена",
         )
-    return ServiceRead.model_validate(service)  # (я добавил)
+    return ServiceRead.model_validate(service)  # 
 
 
 @router.post(
@@ -70,5 +70,5 @@ async def add_service(
     service_in: ServiceCreate,
     db: AsyncSession = Depends(get_async_session),
 ) -> ServiceRead:
-    """Создание услуги."""  # (я добавил)
+    """Создание услуги."""  # 
     return await create_service(db, service_in)
