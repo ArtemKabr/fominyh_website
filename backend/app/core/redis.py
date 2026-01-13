@@ -24,8 +24,8 @@ class DummyRedis:
         return None
 
 
-if settings.testing:  # 
-    redis: Any = DummyRedis()  # 
+if settings.testing:  #
+    redis: Any = DummyRedis()  #
 else:
     redis = Redis(
         host=settings.redis_host,

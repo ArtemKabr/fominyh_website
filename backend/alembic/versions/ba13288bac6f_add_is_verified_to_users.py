@@ -4,6 +4,7 @@ Revision ID: ba13288bac6f
 Revises: 9f6aafaa18eb
 Create Date: 2026-01-07 15:25:26.908871
 """
+
 # backend/alembic/versions/ba13288bac6f_add_is_verified_to_users.py
 # Назначение: добавить флаг подтверждения email пользователю
 
@@ -28,7 +29,7 @@ def upgrade() -> None:
             "is_verified",
             sa.Boolean(),
             nullable=False,
-            server_default=sa.false(),  # 
+            server_default=sa.false(),  #
         ),
     )
 

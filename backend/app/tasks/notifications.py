@@ -18,7 +18,7 @@ from app.core.settings import settings
 
 
 async def _get_booking_context(booking_id: int):
-    """Загрузить связанные данные для уведомлений."""  # 
+    """Загрузить связанные данные для уведомлений."""  #
 
     async with async_session_maker() as session:
         booking = await session.get(Booking, booking_id)
@@ -32,13 +32,13 @@ async def _get_booking_context(booking_id: int):
 
 
 async def _send_telegram(chat_id: int, text: str) -> None:
-    """Отправка сообщения в Telegram (заглушка)."""  # 
+    """Отправка сообщения в Telegram (заглушка)."""  #
     # TODO: подключить aiogram / requests
     print(f"[telegram] chat_id={chat_id}: {text}")
 
 
 async def _send_email(email: str, subject: str, body: str) -> None:
-    """Отправка email (заглушка)."""  # 
+    """Отправка email (заглушка)."""  #
     # TODO: SMTP / SendGrid
     print(f"[email] to={email}: {subject}")
 
@@ -48,9 +48,13 @@ async def _send_email(email: str, subject: str, body: str) -> None:
 # -------------------------------------------------
 
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_kwargs={"max_retries": 3, "countdown": 10})
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 3, "countdown": 10},
+)
 def send_booking_created(self, booking_id: int) -> None:
-    """Уведомление о создании записи."""  # 
+    """Уведомление о создании записи."""  #
 
     async def _run():
         ctx = await _get_booking_context(booking_id)
@@ -91,7 +95,7 @@ def send_booking_created(self, booking_id: int) -> None:
 
 @shared_task(bind=True)
 def send_booking_canceled(self, booking_id: int) -> None:
-    """Уведомление об отмене записи."""  # 
+    """Уведомление об отмене записи."""  #
 
     async def _run():
         ctx = await _get_booking_context(booking_id)
@@ -122,7 +126,7 @@ def send_booking_canceled(self, booking_id: int) -> None:
 
 @shared_task(bind=True)
 def send_booking_reminder(self, booking_id: int, hours: int) -> None:
-    """Напоминание о записи за N часов."""  # 
+    """Напоминание о записи за N часов."""  #
 
     async def _run():
         ctx = await _get_booking_context(booking_id)

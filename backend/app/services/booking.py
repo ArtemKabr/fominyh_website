@@ -15,7 +15,7 @@ from app.models.user import User
 from app.models.salon_settings import SalonSettings
 from app.schemas.booking import BookingCreate
 from app.core.settings import settings
-from app.core.redis import redis  # 
+from app.core.redis import redis  #
 
 
 # -------------------------------------------------
@@ -44,7 +44,7 @@ async def _get_or_create_user(
     phone: str,
     email: str | None,
 ) -> User:
-    """Получить пользователя по телефону или создать нового."""  # 
+    """Получить пользователя по телефону или создать нового."""  #
 
     result = await db.execute(select(User).where(User.phone == phone))
     user = result.scalar_one_or_none()
@@ -56,8 +56,8 @@ async def _get_or_create_user(
         name=name,
         phone=phone,
         email=email,
-        password_hash="",  # 
-        is_admin=False,  # 
+        password_hash="",  #
+        is_admin=False,  #
     )
 
     db.add(user)
@@ -67,7 +67,7 @@ async def _get_or_create_user(
 
 
 async def _get_salon_settings(db: AsyncSession) -> SalonSettings:
-    """Получить настройки салона."""  # 
+    """Получить настройки салона."""  #
 
     result = await db.execute(select(SalonSettings).where(SalonSettings.id == 1))
     settings_obj = result.scalar_one_or_none()
@@ -91,7 +91,7 @@ async def get_free_slots(
     day: date,
     service_id: int,
 ) -> list[datetime]:
-    """Получить свободные временные слоты на день."""  # 
+    """Получить свободные временные слоты на день."""  #
 
     service = await _get_service(db, service_id)
     salon = await _get_salon_settings(db)
@@ -113,7 +113,7 @@ async def get_free_slots(
 
     busy: set[datetime] = {
         b.start_time.replace(second=0, microsecond=0) for b in bookings
-    }  # 
+    }  #
 
     free: list[datetime] = []
 
@@ -137,7 +137,7 @@ async def create_booking(
     db: AsyncSession,
     booking_in: BookingCreate,
 ) -> Booking:
-    """Создать запись с защитой от двойного бронирования."""  # 
+    """Создать запись с защитой от двойного бронирования."""  #
 
     start = booking_in.start_time.replace(
         tzinfo=None,
@@ -185,11 +185,12 @@ async def create_booking(
     await db.refresh(booking)
 
     # инвалидация кеша слотов
-    cache_key = f"free_slots:{start.date()}:{booking.service_id}"  # 
-    await redis.delete(cache_key)  # 
+    cache_key = f"free_slots:{start.date()}:{booking.service_id}"  #
+    await redis.delete(cache_key)  #
 
-    if not settings.testing:  # 
+    if not settings.testing:  #
         from app.tasks.notifications import send_booking_created
+
         send_booking_created.delay(booking.id)
 
     return booking
@@ -204,7 +205,7 @@ async def cancel_booking(
     db: AsyncSession,
     booking_id: int,
 ) -> Booking:
-    """Отмена записи (soft cancel)."""  # 
+    """Отмена записи (soft cancel)."""  #
 
     result = await db.execute(select(Booking).where(Booking.id == booking_id))
     booking = result.scalar_one_or_none()
@@ -219,7 +220,7 @@ async def cancel_booking(
     await db.commit()
     await db.refresh(booking)
 
-    cache_key = f"free_slots:{booking.start_time.date()}:{booking.service_id}"  # 
-    await redis.delete(cache_key)  # 
+    cache_key = f"free_slots:{booking.start_time.date()}:{booking.service_id}"  #
+    await redis.delete(cache_key)  #
 
     return booking

@@ -4,22 +4,22 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class ServiceBase(BaseModel):
-    """Базовые поля услуги."""  # 
+    """Базовые поля услуги."""  #
 
     name: str
     price: int
-    duration_minutes: int = Field(..., ge=1)  # 
+    duration_minutes: int = Field(..., ge=1)  #
 
 
 class ServiceCreate(ServiceBase):
-    """Создание услуги."""  # 
+    """Создание услуги."""  #
 
-    model_config = ConfigDict(extra="forbid")  # 
+    model_config = ConfigDict(extra="forbid")  #
 
 
 class ServiceRead(ServiceBase):
-    """Чтение услуги."""  # 
+    """Чтение услуги."""  #
 
     id: int
 
-    model_config = ConfigDict(from_attributes=True)  # 
+    model_config = ConfigDict(from_attributes=True)  #

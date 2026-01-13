@@ -76,5 +76,5 @@ def health():
 
 @app.on_event("startup")
 async def on_startup():
-    """Автоинициализация данных."""  # 
-    await init_services_if_empty()  # 
+    """Автоинициализация данных."""  #
+    await init_services_if_empty()  #
