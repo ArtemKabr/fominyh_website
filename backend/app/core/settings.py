@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     db_password: str
 
     # --------------------
+    # Redis  ← ВОТ ЭТОГО НЕ ХВАТАЛО
+    # --------------------
+    redis_host: str = "redis"     # (я добавил)
+    redis_port: int = 6379        # (я добавил)
+
+    # --------------------
     # Celery / Redis
     # --------------------
     celery_broker_url: str | None = None  # (я добавил)

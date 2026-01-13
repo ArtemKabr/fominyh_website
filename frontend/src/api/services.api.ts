@@ -1,19 +1,16 @@
-// frontend/src/api/services.api.ts — загрузка услуг из JSON
+// frontend/src/api/services.api.ts — API услуг
+// Назначение: загрузка услуг из backend
+
+import { api } from "./client";
+
 export type Service = {
   id: number;
-  slug: string;
   name: string;
-  shortDescription: string;
-  duration: number;
   price: number;
-  description: string;
-  benefits: string[];
+  duration_minutes: number;
 };
 
 export async function getServices(): Promise<Service[]> {
-  const res = await fetch("/data/services.json");
-  if (!res.ok) {
-    throw new Error("Не удалось загрузить services_db.json");
-  }
-  return res.json();
+  const res = await api.get<Service[]>("/services");
+  return res.data;
 }

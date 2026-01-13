@@ -1,77 +1,103 @@
-# backend/tests/conftest.py — фикстуры pytest для API
-# Назначение: настройка тестовой БД и клиента FastAPI
+# backend/tests/conftest.py — фикстуры pytest
+# Назначение: изоляция тестов от Redis и PostgreSQL, корректная работа async
 
-import sys
-from pathlib import Path
+import pytest
+import pytest_asyncio
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    AsyncSession,
+)
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 
-BASE_DIR = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(BASE_DIR))  # noqa: E402  # (я добавил)
+from app.core.settings import settings
 
-import asyncio  # noqa: E402
-import pytest  # noqa: E402
-from httpx import AsyncClient  # noqa: E402
-from sqlalchemy import select  # noqa: E402
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine  # noqa: E402
-from sqlalchemy.orm import sessionmaker  # noqa: E402
+# -------------------------------------------------
+# ВАЖНО: включаем режим тестов ДО импорта app
+# -------------------------------------------------
+settings.testing = True  # (я добавил)
 
 from app.main import app  # noqa: E402
 from app.core.database import Base, get_async_session  # noqa: E402
-from app.core.settings import settings  # noqa: E402
 
 
-settings.testing = True  # (я добавил)
+# -------------------------------------------------
+# Заглушка Redis
+# -------------------------------------------------
+class DummyRedis:
+    """Заглушка Redis для тестов."""  # (я добавил)
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+    async def get(self, *args, **kwargs):
+        return None
+
+    async def set(self, *args, **kwargs):
+        return None
+
+    async def delete(self, *args, **kwargs):
+        return None
+
+    async def close(self):
+        return None
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+@pytest.fixture(autouse=True)
+def disable_redis(monkeypatch):
+    """Отключает Redis во всех тестах."""  # (я добавил)
+    monkeypatch.setattr(
+        "app.core.redis.redis",
+        DummyRedis(),
+    )
 
 
-@pytest.fixture(scope="session")
+# -------------------------------------------------
+# Тестовая БД (SQLite in-memory)
+# -------------------------------------------------
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"  # (я добавил)
+
+
+@pytest_asyncio.fixture(scope="session")
 async def engine():
     engine = create_async_engine(TEST_DATABASE_URL)
-
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-
     yield engine
-
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db(engine):
     async_session = sessionmaker(
         engine,
         class_=AsyncSession,
         expire_on_commit=False,
     )
-
     async with async_session() as session:
         yield session
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(db):
     async def override_get_db():
         yield db
 
     app.dependency_overrides[get_async_session] = override_get_db
 
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(
+        app=app,
+        base_url="http://test",
+    ) as client:
         yield client
 
 
-@pytest.fixture(autouse=True)
+# -------------------------------------------------
+# Начальные данные
+# -------------------------------------------------
+@pytest_asyncio.fixture(autouse=True)
 async def seed_service(db):
-    """Создаёт базовую услугу для тестов."""
+    """Создаёт базовую услугу для тестов."""  # (я добавил)
     from app.models.service import Service
 
     result = await db.execute(
@@ -92,5 +118,4 @@ async def seed_service(db):
     db.add(service)
     await db.commit()
     await db.refresh(service)
-
     return service

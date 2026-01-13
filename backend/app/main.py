@@ -11,6 +11,7 @@ from app.api.booking import router as booking_router
 from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.admin_settings import router as admin_settings_router
+from app.startup import init_services_if_empty
 
 
 app = FastAPI(
@@ -71,3 +72,9 @@ async def on_shutdown():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.on_event("startup")
+async def on_startup():
+    """Автоинициализация данных."""  # (я добавил)
+    await init_services_if_empty()  # (я добавил)
