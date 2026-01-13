@@ -19,7 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    """Добавить telegram_chat_id пользователю."""  # 
+    """Добавить telegram_chat_id пользователю."""  #
     op.add_column(
         "users",
         sa.Column(
@@ -31,5 +31,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Удалить telegram_chat_id у пользователя."""  # 
+    """Удалить telegram_chat_id у пользователя."""  #
     op.drop_column("users", "telegram_chat_id")

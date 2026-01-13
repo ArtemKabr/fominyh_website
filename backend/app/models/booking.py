@@ -9,18 +9,18 @@ from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.user import User  # (я добавил)
+from app.models.user import User  #
 
 
 class BookingStatus(str, Enum):
-    """Статусы записи."""  # (я добавил)
+    """Статусы записи."""  #
 
     ACTIVE = "active"
     CANCELED = "canceled"
 
 
 class Booking(Base):
-    """Запись клиента на услугу."""  # (я добавил)
+    """Запись клиента на услугу."""  #
 
     __tablename__ = "bookings"
 
@@ -29,9 +29,9 @@ class Booking(Base):
     user_id: Mapped[int | None] = mapped_column(
         ForeignKey("users.id"),
         nullable=True,
-    )  # (я добавил)
+    )  #
 
-    user: Mapped[User | None] = relationship("User")  # (я добавил)
+    user: Mapped[User | None] = relationship("User")  #
 
     service_id: Mapped[int] = mapped_column(ForeignKey("services.id"))
 

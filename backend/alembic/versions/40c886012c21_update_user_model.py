@@ -12,7 +12,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import inspect  # (я добавил)
+from sqlalchemy import inspect  #
 
 # revision identifiers, used by Alembic.
 revision: str = "40c886012c21"
@@ -22,10 +22,10 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    bind = op.get_bind()  # (я добавил)
-    inspector = inspect(bind)  # (я добавил)
+    bind = op.get_bind()  #
+    inspector = inspect(bind)  #
 
-    columns = [col["name"] for col in inspector.get_columns("users")]  # (я добавил)
+    columns = [col["name"] for col in inspector.get_columns("users")]  #
 
     if "is_admin" not in columns:
         op.add_column(
@@ -36,7 +36,7 @@ def upgrade() -> None:
                 nullable=False,
                 server_default=sa.false(),
             ),
-        )  # (я добавил)
+        )  #
 
 
 def downgrade() -> None:

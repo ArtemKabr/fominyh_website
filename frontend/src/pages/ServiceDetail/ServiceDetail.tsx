@@ -57,7 +57,7 @@ export function ServiceDetail() {
 
         <button
           className="service-detail__btn"
-          onClick={() => navigate(`/booking/${service.id}`)} // (я добавил)
+          onClick={() => navigate(`/booking/${service.id}`)} // 
         >
           Записаться
         </button>

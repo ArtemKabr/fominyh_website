@@ -1,72 +1,151 @@
-# backend/tests/conftest.py — фикстуры pytest для API
+# backend/app/tasks/notifications.py — celery-задачи уведомлений
+# Назначение: уведомления пользователям и админу (Telegram / email)
 
-import pytest
-from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import select
+import asyncio
 
-from app.main import app
-from app.core.database import Base, get_async_session
+from celery import shared_task
+
+from app.core.database import async_session_maker
+from app.models.booking import Booking, BookingStatus
+from app.models.user import User
+from app.models.service import Service
 from app.core.settings import settings
 
-settings.testing = True  # (я добавил)
 
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"  # (я добавил)
-
-
-@pytest.fixture(scope="session")
-async def engine():
-    engine = create_async_engine(TEST_DATABASE_URL)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield engine
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
+# -------------------------------------------------
+# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+# -------------------------------------------------
 
 
-@pytest.fixture
-async def db(engine):
-    async_session = sessionmaker(
-        engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-    )
-    async with async_session() as session:
-        yield session
+async def _get_booking_context(booking_id: int):
+    """Загрузить связанные данные для уведомлений."""  #
+
+    async with async_session_maker() as session:
+        booking = await session.get(Booking, booking_id)
+        if not booking:
+            return None
+
+        user = await session.get(User, booking.user_id)
+        service = await session.get(Service, booking.service_id)
+
+        return booking, user, service
 
 
-@pytest.fixture
-async def client(db):
-    async def override_get_db():
-        yield db
-
-    app.dependency_overrides[get_async_session] = override_get_db
-
-    async with AsyncClient(app=app, base_url="http://test") as c:
-        yield c
+async def _send_telegram(chat_id: int, text: str) -> None:
+    """Отправка сообщения в Telegram (заглушка)."""  #
+    # TODO: подключить aiogram / requests
+    print(f"[telegram] chat_id={chat_id}: {text}")
 
 
-@pytest.fixture(autouse=True)
-async def seed_service(db):
-    """Создаёт базовую услугу, если её ещё нет."""  # (я добавил)
-    from app.models.service import Service
+async def _send_email(email: str, subject: str, body: str) -> None:
+    """Отправка email (заглушка)."""  #
+    # TODO: SMTP / SendGrid
+    print(f"[email] to={email}: {subject}")
 
-    result = await db.execute(select(Service).where(Service.slug == "test-service"))
-    service = result.scalar_one_or_none()
 
-    if service:
-        return service
+# -------------------------------------------------
+# УВЕДОМЛЕНИЯ О СОЗДАНИИ ЗАПИСИ
+# -------------------------------------------------
 
-    service = Service(
-        name="Тестовая услуга",
-        slug="test-service",
-        category="face",
-        price=1000,
-        duration_minutes=60,
-    )
-    db.add(service)
-    await db.commit()
-    await db.refresh(service)
-    return service
+
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_kwargs={"max_retries": 3, "countdown": 10},
+)
+def send_booking_created(self, booking_id: int) -> None:
+    """Уведомление о создании записи."""  #
+
+    async def _run():
+        ctx = await _get_booking_context(booking_id)
+        if not ctx:
+            return
+
+        booking, user, service = ctx
+
+        text = (
+            f"📌 Новая запись\n"
+            f"Услуга: {service.name}\n"
+            f"Дата: {booking.start_time:%d.%m.%Y %H:%M}\n"
+            f"Телефон: {user.phone}"
+        )
+
+        # админу
+        if settings.admin_telegram_chat_id:
+            await _send_telegram(settings.admin_telegram_chat_id, text)
+
+        # пользователю
+        if user.telegram_chat_id:
+            await _send_telegram(user.telegram_chat_id, "✅ Вы успешно записались")
+
+        if user.email:
+            await _send_email(
+                user.email,
+                "Запись подтверждена",
+                f"Вы записаны на {service.name} {booking.start_time:%d.%m.%Y %H:%M}",
+            )
+
+    asyncio.run(_run())
+
+
+# -------------------------------------------------
+# УВЕДОМЛЕНИЕ ОБ ОТМЕНЕ
+# -------------------------------------------------
+
+
+@shared_task(bind=True)
+def send_booking_canceled(self, booking_id: int) -> None:
+    """Уведомление об отмене записи."""  #
+
+    async def _run():
+        ctx = await _get_booking_context(booking_id)
+        if not ctx:
+            return
+
+        booking, user, service = ctx
+
+        text = (
+            f"❌ Запись отменена\n"
+            f"Услуга: {service.name}\n"
+            f"Дата: {booking.start_time:%d.%m.%Y %H:%M}"
+        )
+
+        if user.telegram_chat_id:
+            await _send_telegram(user.telegram_chat_id, text)
+
+        if user.email:
+            await _send_email(user.email, "Запись отменена", text)
+
+    asyncio.run(_run())
+
+
+# -------------------------------------------------
+# НАПОМИНАНИЯ
+# -------------------------------------------------
+
+
+@shared_task(bind=True)
+def send_booking_reminder(self, booking_id: int, hours: int) -> None:
+    """Напоминание о записи за N часов."""  #
+
+    async def _run():
+        ctx = await _get_booking_context(booking_id)
+        if not ctx:
+            return
+
+        booking, user, service = ctx
+
+        if booking.status != BookingStatus.ACTIVE.value:
+            return
+
+        text = (
+            f"⏰ Напоминание\n"
+            f"Через {hours} ч. у вас запись:\n"
+            f"{service.name}\n"
+            f"{booking.start_time:%d.%m.%Y %H:%M}"
+        )
+
+        if user.telegram_chat_id:
+            await _send_telegram(user.telegram_chat_id, text)
+
+    asyncio.run(_run())

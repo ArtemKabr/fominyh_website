@@ -5,7 +5,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  base: "/", // (я добавил) ОБЯЗАТЕЛЬНО для nginx и продакшена
+  base: "/", //  ОБЯЗАТЕЛЬНО для nginx и продакшена
   plugins: [react()],
   server: {
     proxy: {

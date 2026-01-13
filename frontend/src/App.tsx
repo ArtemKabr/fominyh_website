@@ -24,7 +24,7 @@ export default function App() {
         <Route path="/services/:category/:slug" element={<ServiceDetail />} />
 
         {/* запись — ТОЛЬКО с serviceId */}
-        <Route path="/booking/:serviceId" element={<Booking />} /> {/* (я добавил) */}
+        <Route path="/booking/:serviceId" element={<Booking />} /> {/*  */}
 
         {/* защита от несуществующих роутов */}
         <Route path="*" element={<Navigate to="/" replace />} />

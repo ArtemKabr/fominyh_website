@@ -39,9 +39,7 @@ def upgrade() -> None:
     )
 
     # 4. проставляем дефолтную категорию для существующих услуг
-    op.execute(
-        "UPDATE services SET category = 'other' WHERE category IS NULL"
-    )
+    op.execute("UPDATE services SET category = 'other' WHERE category IS NULL")
 
     # 5. делаем category обязательным
     op.alter_column(

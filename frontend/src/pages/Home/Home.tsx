@@ -132,10 +132,10 @@ export function Home() {
         },
     ];
 
-    const REVIEWS_PER_PAGE = 2; // (я добавил)
+    const REVIEWS_PER_PAGE = 2; // 
 
     const [reviewIndex, setReviewIndex] = useState(0);
-    const [direction, setDirection] = useState<"next" | "prev">("next"); // (я добавил)
+    const [direction, setDirection] = useState<"next" | "prev">("next"); // 
 
     const visibleReviews = reviews.slice(
         reviewIndex,
@@ -144,14 +144,14 @@ export function Home() {
 
     const nextReviews = () => {
         if (reviewIndex + REVIEWS_PER_PAGE < reviews.length) {
-            setDirection("next"); // (я добавил)
+            setDirection("next"); // 
             setReviewIndex(reviewIndex + 1);
         }
     };
 
     const prevReviews = () => {
         if (reviewIndex > 0) {
-            setDirection("prev"); // (я добавил)
+            setDirection("prev"); // 
             setReviewIndex(reviewIndex - 1);
         }
     };

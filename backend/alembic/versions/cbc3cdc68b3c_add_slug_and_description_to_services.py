@@ -22,19 +22,19 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # 1. Добавляем slug временно nullable  # (я добавил)
+    # 1. Добавляем slug временно nullable  #
     op.add_column(
         "services",
         sa.Column("slug", sa.String(length=255), nullable=True),
     )
 
-    # 2. Добавляем description  # (я добавил)
+    # 2. Добавляем description  #
     op.add_column(
         "services",
         sa.Column("description", sa.Text(), nullable=True),
     )
 
-    # 3. Расширяем name  # (я добавил)
+    # 3. Расширяем name  #
     op.alter_column(
         "services",
         "name",
@@ -43,7 +43,7 @@ def upgrade() -> None:
         existing_nullable=False,
     )
 
-    # 4. Генерация уникальных slug для существующих записей  # (я добавил)
+    # 4. Генерация уникальных slug для существующих записей  #
     op.execute(
         """
         WITH base AS (
@@ -69,14 +69,14 @@ def upgrade() -> None:
         """
     )
 
-    # 5. Делаем slug NOT NULL  # (я добавил)
+    # 5. Делаем slug NOT NULL  #
     op.alter_column(
         "services",
         "slug",
         nullable=False,
     )
 
-    # 6. Вешаем уникальное ограничение  # (я добавил)
+    # 6. Вешаем уникальное ограничение  #
     op.create_unique_constraint(
         "uq_services_slug",
         "services",
