@@ -1,10 +1,11 @@
 // frontend/vite.config.ts
-// Назначение: dev-proxy для API
+// Назначение: конфигурация Vite (dev + production)
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
+  base: "/", // (я добавил) ОБЯЗАТЕЛЬНО для nginx и продакшена
   plugins: [react()],
   server: {
     proxy: {
