@@ -28,6 +28,7 @@ services:
     volumes:
       - ./backend:/app
       - ./backend/data:/app/data
+      - ./backend/media:/app/media
     depends_on:
       db:
         condition: service_healthy

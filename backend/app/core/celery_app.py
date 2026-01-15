@@ -7,8 +7,8 @@ from celery.schedules import crontab
 from app.core.settings import settings
 
 
-BROKER_URL = settings.celery_broker_url or "redis://redis:6379/0"  #
-RESULT_BACKEND = settings.celery_result_backend or "redis://redis:6379/1"  #
+BROKER_URL = settings.celery_broker_url or "redis://redis:6379/0"  # (я добавил)
+RESULT_BACKEND = settings.celery_result_backend or "redis://redis:6379/1"  # (я добавил)
 
 
 celery_app = Celery(
@@ -27,9 +27,14 @@ celery_app.conf.beat_schedule = {
         "task": "app.tasks.notifications.check_upcoming_bookings",
         "schedule": crontab(minute="*/5"),
     },
+    "apply-bonuses-every-5-minutes": {
+        "task": "app.tasks.bonuses.apply_bonuses_task",
+        "schedule": crontab(minute="*/5"),
+    },
 }
 
 # гарантируем регистрацию задач
 import app.tasks.notifications  # noqa: E402,F401
+import app.tasks.bonuses        # noqa: E402,F401  # (я добавил)
 
 __all__ = ["celery_app"]

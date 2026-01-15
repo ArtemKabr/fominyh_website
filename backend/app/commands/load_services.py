@@ -1,58 +1,64 @@
-# backend/app/commands/load_services.py — загрузка услуг в БД
-# Назначение: начальная загрузка услуг из JSON
+# backend/app/scripts/load_services.py — загрузка услуг из JSON в БД
+# Назначение: первичное наполнение таблицы services из services_db.json
 
-import asyncio
 import json
+import asyncio
 from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
 
+from app.core.database import get_engine, Base
 from app.models.service import Service
-from app.core.database import async_session_maker  # для CLI запуска
-
-DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "services_db.json"  #
 
 
-async def load_services(db: AsyncSession) -> None:
-    """Загрузка услуг в базу данных."""  #
-
-    if not DATA_PATH.exists():
-        raise FileNotFoundError(f"Файл не найден: {DATA_PATH}")  #
-
-    data = json.loads(DATA_PATH.read_text(encoding="utf-8"))
-
-    for item in data:
-        # проверяем по slug, а не по id  #
-        res = await db.execute(select(Service).where(Service.slug == item["slug"]))
-        exists = res.scalar_one_or_none()
-
-        if exists:
-            continue
-
-        service = Service(
-            name=item["name"],
-            slug=item["slug"],
-            category=item["category"],
-            description=item["description"],
-            price=item["price"],
-            duration_minutes=item.get("duration") or item.get("duration_minutes"),  #
-            image=item.get("image"),
-            benefits=item.get("benefits"),
-        )
-
-        db.add(service)
-
-    await db.commit()
+DATA_FILE = Path(__file__).parent.parent / "data" / "services_db.json"
 
 
-# --- CLI запуск (оставляем) ---
+async def load_services() -> None:
+    """Загрузить услуги из services_db.json в БД."""  # (я добавил)
 
+    engine = get_engine()
 
-async def _run_cli() -> None:  #
+    # 1. Создаём таблицы, если их нет
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)  # (я добавил)
+
+    # 2. Создаём async-сессию
+    async_session_maker = sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
     async with async_session_maker() as session:
-        await load_services(session)
+        # 3. Проверка: если услуги уже есть — выходим
+        res = await session.execute(select(Service.id))
+        if res.first():
+            print("Услуги уже существуют, загрузка не требуется")  # (я добавил)
+            return
+
+        # 4. Читаем JSON
+        with DATA_FILE.open(encoding="utf-8") as f:
+            services = json.load(f)
+
+        # 5. Загружаем услуги (ВСЕ обязательные поля)
+        for item in services:
+            service = Service(
+                name=item["name"],
+                slug=item["slug"],  # (я добавил)
+                category=item.get("category"),  # (я добавил)
+                description=item.get("description"),  # (я добавил)
+                image=item.get("image"),  # (я добавил)
+                price=item["price"],
+                duration_minutes=item["duration_minutes"],
+            )
+            session.add(service)
+
+        await session.commit()
+        print(f"Загружено услуг: {len(services)}")  # (я добавил)
 
 
 if __name__ == "__main__":
-    asyncio.run(_run_cli())
+    asyncio.run(load_services())

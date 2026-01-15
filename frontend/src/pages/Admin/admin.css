@@ -1,0 +1,449 @@
+/* frontend/src/pages/Admin/admin.css — стили админ-панели */
+/* Назначение: единый премиум-стиль админки */
+/* ========================================================= */
+/* 1. LAYOUT АДМИНКИ (AdminLayout.tsx) */
+/* ========================================================= */
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 18px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 16px;
+}
+
+.admin-layout__menu {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  position: sticky;
+  top: 16px;
+  height: fit-content;
+}
+
+.admin-layout__title {
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.admin-layout__link {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #2a2a2a;
+  margin-bottom: 6px;
+  background: #fafafa;
+}
+
+.admin-layout__link.active {
+  background: #cfa46a;
+  color: #fff;
+}
+
+.admin-layout__content {
+  min-height: 70vh;
+}
+
+/* ========================================================= */
+/* 2. ОБЩИЕ СТИЛИ СТРАНИЦ АДМИНКИ (BookingsPage, UsersPage) */
+/* ========================================================= */
+
+.admin {
+  padding: 6px 0;
+}
+
+.admin__h1 {
+  font-size: 30px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.admin__muted {
+  color: #777;
+}
+
+/* ========================================================= */
+/* 3. КАРТОЧКИ ЗАПИСЕЙ / ИСТОРИИ (BookingsPage, HistoryPage) */
+/* ========================================================= */
+
+.admin-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.admin-card--pending {
+  border: 2px solid rgba(207, 164, 106, 0.45);
+}
+
+.admin-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.admin-card__title {
+  font-weight: 600;
+}
+
+.admin-card__row {
+  margin-top: 6px;
+}
+
+.admin-card__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* ========================================================= */
+/* 4. БЕЙДЖИ СТАТУСОВ (status badges) */
+/* ========================================================= */
+
+.badge {
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f1f1f1;
+  color: #333;
+}
+
+.badge--pending {
+  background: #fff3e2;
+  color: #9a5b00;
+}
+
+.badge--ok {
+  background: #e9f7ee;
+  color: #1e6b3c;
+}
+
+.badge--bad {
+  background: #fdeaea;
+  color: #9b1b1b;
+}
+
+.badge--done {
+  background: #eef0f6;
+  color: #2f3b62;
+}
+
+/* ========================================================= */
+/* 5. КНОПКИ (используются по всей админке) */
+/* ========================================================= */
+
+.btn {
+  border: none;
+  border-radius: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: #cfa46a;
+  color: #fff;
+}
+
+.btn--danger {
+  background: #e24b4b;
+  color: #fff;
+}
+
+.btn--ghost {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+}
+
+/* ========================================================= */
+/* 6. СЛОТЫ И КАЛЕНДАРЬ (SlotsPage.tsx) */
+/* ========================================================= */
+
+.slots__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0 14px;
+}
+
+.slots__month {
+  font-weight: 600;
+}
+
+.slots__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.slot-day {
+  border: 1px solid #ffffff;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 12px;
+  cursor: pointer;
+  text-align: left;
+  min-height: 64px;
+}
+
+.slot-day--busy {
+  border-color: rgba(255, 5, 243, 0.45);
+}
+
+.slot-day__num {
+  font-weight: 700;
+}
+
+.slot-day__count {
+  margin-top: 10px;
+  font-size: 25px;
+  color: #ff0026;
+}
+
+.slots__details {
+  margin-top: 16px;
+}
+
+.slots__details-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* ========================================================= */
+/* 7. ПАНЕЛИ И ФОРМЫ (ServicesPage, SettingsPage) */
+/* ========================================================= */
+
+.panel {
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.panel__title {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 140px 140px 140px;
+  gap: 10px;
+}
+
+.input {
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.input--table {
+  width: 100%;
+}
+
+/* ========================================================= */
+/* 8. ТАБЛИЦЫ (ServicesPage, UsersPage) */
+/* ========================================================= */
+
+.table {
+  background: #fff;
+  border-radius: 16px;
+  padding: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.table__head,
+.table__row {
+  display: grid;
+  grid-template-columns: 1fr 140px 140px 120px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+}
+
+.table__head {
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+}
+
+/* ========================================================= */
+/* 9. ПОЛЬЗОВАТЕЛИ (UsersPage.tsx) */
+/* ========================================================= */
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+/* ========================================================= */
+/* 10. СТАТИСТИКА (StatsPage.tsx) */
+/* ========================================================= */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.stat {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.stat__label {
+  color: #777;
+  font-size: 14px;
+}
+
+.stat__value {
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+/* ========================================================= */
+/* 11. АДАПТИВ */
+/* ========================================================= */
+
+@media (max-width: 900px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .users-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ========================================================= */
+/* ServicesPage.tsx — редактирование услуг */
+/* ========================================================= */
+
+.table__row--edit {
+  background: rgba(226, 75, 75, 0.06); /* красная подсветка */
+  border-radius: 12px;
+}
+
+.table__actions {
+  display: flex;
+  gap: 8px;
+}
+
+
+
+/* ===== слоты: выбор и режимы ===== */
+
+.slot-time {
+  transition: all 0.15s ease;
+}
+
+.slot-time--admin {
+  background: #4adc7e;
+  color: #fff;
+  border-color: #4add7f;
+}
+
+.slot-time--client {
+  background: #4ade80;
+  color: #fff;
+  border-color: #4ade80;
+}
+
+.btn--active {
+  background: #111;
+  color: #fff;
+}
+
+.slot-actions {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.slot-actions__modes {
+  display: flex;
+  gap: 8px;
+}
+
+.slot-actions__confirm {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+
+/* client-form — форма клиента под слотами */
+.client-form {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.client-form__input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e7e7e7;
+  outline: none;
+}
+
+
+/* ===== modal ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  padding: 24px;
+  border-radius: 16px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modal input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+

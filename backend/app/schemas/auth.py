@@ -10,7 +10,7 @@ class RegisterIn(BaseModel):
     name: str = Field(..., min_length=1)
     phone: str
     email: EmailStr
-    password: str = Field(..., min_length=8)
+    password: str = Field(..., min_length=4)
 
 
 class LoginIn(BaseModel):

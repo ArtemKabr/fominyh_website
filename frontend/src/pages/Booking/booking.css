@@ -41,8 +41,10 @@
   padding: 12px 16px;
   font-size: 16px;
   border-radius: 12px;
-  border: 1px solid rgba(0,0,0,0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
 }
+
+/* ===== СЛОТЫ ВРЕМЕНИ ===== */
 
 .booking__slots {
   display: flex;
@@ -51,29 +53,38 @@
 }
 
 .booking__slot {
-  padding: 12px 18px;
+  min-width: 64px;                 /* (я добавил) */
+  height: 36px;                    /* (я добавил) */
+
+  display: flex;                   /* (я добавил) */
+  align-items: center;             /* (я добавил) */
+  justify-content: center;         /* (я добавил) */
+
+  padding: 0 16px;                 /* (я изменил) */
   border-radius: 999px;
-  border: 1px solid rgba(0,0,0,0.2);
+  border: 1px solid rgba(0, 0, 0, 0.2);
   background: transparent;
+
+  font-size: 14px;                 /* (я добавил) */
+  font-weight: 500;                /* (я добавил) */
+  line-height: 1;                  /* (я добавил) */
+  color: #2a2a2a;                  /* (я добавил) */
+
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .booking__slot:hover {
-  background: rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .booking__slot--active {
   background: #d6b37c;
   border-color: #d6b37c;
+  color: #ffffff;                  /* (я добавил) */
 }
 
-.booking__next {
-  margin-top: 40px;
-  font-size: 18px;
-  opacity: 0.7;
-}
-
+/* ===== КНОПКА ЗАПИСИ ===== */
 
 .booking__submit {
   margin-top: 24px;
@@ -82,5 +93,34 @@
   border: none;
   background: #d6b37c;
   font-size: 16px;
+  font-weight: 500;                /* (я добавил) */
   cursor: pointer;
+}
+
+.booking__submit:disabled {
+  opacity: 0.6;                    /* (я добавил) */
+  cursor: default;                 /* (я добавил) */
+}
+
+
+
+/* frontend/src/pages/Booking/booking.css — текст слотов */
+/* Назначение: гарантированное отображение времени */
+
+.booking__slot {
+  display: flex;                /* (я добавил) */
+  align-items: center;          /* (я добавил) */
+  justify-content: center;      /* (я добавил) */
+}
+
+.booking__slot-text {
+  font-size: 14px;              /* (я добавил) */
+  font-weight: 500;             /* (я добавил) */
+  line-height: 1;               /* (я добавил) */
+  color: #2a2a2a;               /* (я добавил) */
+  pointer-events: none;         /* (я добавил) */
+}
+
+.booking__slot--active .booking__slot-text {
+  color: #ffffff;               /* (я добавил) */
 }

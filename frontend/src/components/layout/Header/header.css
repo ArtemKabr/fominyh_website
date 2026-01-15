@@ -82,3 +82,12 @@
   margin-top: 0;
   padding: 48px 16px;
 }
+
+
+.header__account {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: #cfa46a;
+  color: #fff;
+  text-decoration: none;
+}

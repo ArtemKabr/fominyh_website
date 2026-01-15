@@ -1,6 +1,5 @@
 # backend/app/services/booking.py — бизнес-логика онлайн-записи
 # Назначение: создание, отмена записей и расчёт свободных слотов
-
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
@@ -11,11 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.booking import Booking, BookingStatus
 from app.models.service import Service
-from app.models.user import User
 from app.models.salon_settings import SalonSettings
+from app.schemas.booking import AdminSlotBookIn
 from app.schemas.booking import BookingCreate
+from app.core.redis import redis
 from app.core.settings import settings
-from app.core.redis import redis  #
 
 
 # -------------------------------------------------
@@ -25,9 +24,10 @@ from app.core.redis import redis  #
 
 async def _get_service(db: AsyncSession, service_id: int) -> Service:
     """Получить услугу или выбросить 404."""
-
-    result = await db.execute(select(Service).where(Service.id == service_id))
-    service = result.scalar_one_or_none()
+    res = await db.execute(
+        select(Service).where(Service.id == service_id)
+    )
+    service = res.scalar_one_or_none()
 
     if not service:
         raise HTTPException(
@@ -38,41 +38,14 @@ async def _get_service(db: AsyncSession, service_id: int) -> Service:
     return service
 
 
-async def _get_or_create_user(
-    db: AsyncSession,
-    name: str,
-    phone: str,
-    email: str | None,
-) -> User:
-    """Получить пользователя по телефону или создать нового."""  #
-
-    result = await db.execute(select(User).where(User.phone == phone))
-    user = result.scalar_one_or_none()
-
-    if user:
-        return user
-
-    user = User(
-        name=name,
-        phone=phone,
-        email=email,
-        password_hash="",  #
-        is_admin=False,  #
-    )
-
-    db.add(user)
-    await db.flush()
-
-    return user
-
-
 async def _get_salon_settings(db: AsyncSession) -> SalonSettings:
-    """Получить настройки салона."""  #
+    """Получить настройки салона."""
+    res = await db.execute(
+        select(SalonSettings).where(SalonSettings.id == 1)
+    )
+    settings_obj = res.scalar_one_or_none()
 
-    result = await db.execute(select(SalonSettings).where(SalonSettings.id == 1))
-    settings_obj = result.scalar_one_or_none()
-
-    if settings_obj is None:
+    if not settings_obj:
         settings_obj = SalonSettings(id=1)
         db.add(settings_obj)
         await db.commit()
@@ -91,36 +64,39 @@ async def get_free_slots(
     day: date,
     service_id: int,
 ) -> list[datetime]:
-    """Получить свободные временные слоты на день."""  #
+    """Получить свободные временные слоты на день."""
 
     service = await _get_service(db, service_id)
     salon = await _get_salon_settings(db)
 
     duration = timedelta(minutes=service.duration_minutes)
 
-    day_start = datetime.combine(day, time.min)
-    day_end = datetime.combine(day, time.max)
+    day_start = datetime.combine(day, time(hour=salon.work_start_hour))
+    day_end = datetime.combine(day, time(hour=salon.work_end_hour))
 
-    result = await db.execute(
+    res = await db.execute(
         select(Booking).where(
             Booking.service_id == service_id,
             Booking.start_time >= day_start,
-            Booking.start_time <= day_end,
-            Booking.status == BookingStatus.ACTIVE.value,
+            Booking.start_time < day_end,
+            Booking.status.in_(
+                [
+                    BookingStatus.PENDING.value,
+                    BookingStatus.ACTIVE.value,
+                ]
+            ),  # (я добавил)
         )
     )
-    bookings = result.scalars().all()
 
-    busy: set[datetime] = {
-        b.start_time.replace(second=0, microsecond=0) for b in bookings
-    }  #
+    busy = {
+        b.start_time.replace(second=0, microsecond=0)
+        for b in res.scalars().all()
+    }
 
     free: list[datetime] = []
+    current = day_start
 
-    current = datetime.combine(day, time(hour=salon.work_start_hour))
-    end = datetime.combine(day, time(hour=salon.work_end_hour))
-
-    while current + duration <= end:
+    while current + duration <= day_end:
         if current not in busy:
             free.append(current)
         current += timedelta(minutes=salon.interval_minutes)
@@ -137,13 +113,14 @@ async def create_booking(
     db: AsyncSession,
     booking_in: BookingCreate,
 ) -> Booking:
-    """Создать запись с защитой от двойного бронирования."""  #
+    """Создать запись (гость или пользователь)."""
 
-    start = booking_in.start_time.replace(
-        tzinfo=None,
-        second=0,
-        microsecond=0,
-    )
+    start = booking_in.start_time
+    if start is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Start time is required",
+        )
 
     if start < datetime.utcnow():
         raise HTTPException(
@@ -153,45 +130,50 @@ async def create_booking(
 
     await _get_service(db, booking_in.service_id)
 
-    result = await db.execute(
+    exists = await db.execute(
         select(Booking).where(
             Booking.service_id == booking_in.service_id,
             Booking.start_time == start,
-            Booking.status == BookingStatus.ACTIVE.value,
+            Booking.status.in_(
+                [BookingStatus.PENDING.value, BookingStatus.ACTIVE.value]
+            ),
         )
     )
-    if result.scalar_one_or_none():
+    if exists.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Slot already booked",
         )
 
-    user = await _get_or_create_user(
-        db=db,
-        name=booking_in.user_name,
-        phone=booking_in.phone,
-        email=booking_in.email,
-    )
-
     booking = Booking(
-        user_id=user.id,
+        user_id=None,  # гость
         service_id=booking_in.service_id,
         start_time=start,
-        status=BookingStatus.ACTIVE.value,
+        status=BookingStatus.PENDING.value,
+
+        guest_name=booking_in.user_name,  # (я добавил)
+        guest_phone=booking_in.phone,  # (я добавил)
+        guest_email=booking_in.email,  # (я добавил)
     )
 
     db.add(booking)
     await db.commit()
     await db.refresh(booking)
 
-    # инвалидация кеша слотов
-    cache_key = f"free_slots:{start.date()}:{booking.service_id}"  #
-    await redis.delete(cache_key)  #
+    cache_key = f"free_slots:{start.date()}:{booking.service_id}"
+    await redis.delete(cache_key)
 
-    if not settings.testing:  #
-        from app.tasks.notifications import send_booking_created
-
-        send_booking_created.delay(booking.id)
+    if not settings.testing:
+        try:
+            from app.tasks.notifications import send_booking_created
+            send_booking_created.delay(
+                booking.id,
+                booking_in.user_name,
+                booking_in.phone,
+                booking_in.email,
+            )
+        except Exception:
+            pass
 
     return booking
 
@@ -205,10 +187,12 @@ async def cancel_booking(
     db: AsyncSession,
     booking_id: int,
 ) -> Booking:
-    """Отмена записи (soft cancel)."""  #
+    """Отмена записи (soft cancel)."""
 
-    result = await db.execute(select(Booking).where(Booking.id == booking_id))
-    booking = result.scalar_one_or_none()
+    res = await db.execute(
+        select(Booking).where(Booking.id == booking_id)
+    )
+    booking = res.scalar_one_or_none()
 
     if not booking:
         raise HTTPException(
@@ -220,7 +204,128 @@ async def cancel_booking(
     await db.commit()
     await db.refresh(booking)
 
-    cache_key = f"free_slots:{booking.start_time.date()}:{booking.service_id}"  #
-    await redis.delete(cache_key)  #
+    cache_key = (
+        f"free_slots:{booking.start_time.date()}:{booking.service_id}"
+    )
+    await redis.delete(cache_key)
+
+    return booking
+
+
+# backend/app/services/booking.py
+
+async def get_day_slots_full(
+    db: AsyncSession,
+    day: date,
+    service_id: int,
+):
+    """Все временные интервалы дня с состоянием."""
+    free = await get_free_slots(db, day, service_id)
+
+    result = await db.execute(
+        select(Booking).where(
+            Booking.service_id == service_id,  # (я добавил)
+            Booking.start_time.between(
+                datetime.combine(day, time.min),
+                datetime.combine(day, time.max),
+            ),
+            Booking.status.in_(
+                [BookingStatus.PENDING.value, BookingStatus.ACTIVE.value]
+            ),  # (я добавил)
+        )
+    )
+
+    booked = {
+        b.start_time: {
+            "booking_id": b.id,
+            "by_admin": b.created_by_admin,
+            "comment": b.admin_comment,
+        }
+        for b in result.scalars()
+    }
+
+    slots = []
+    for slot in free:
+        slots.append({
+            "time": slot.strftime("%H:%M"),
+            "status": "free",
+        })
+
+    for t, info in booked.items():
+        slots.append({
+            "time": t.strftime("%H:%M"),
+            "status": "booked",
+            "booking_id": info["booking_id"],
+            "by_admin": info["by_admin"],
+            "comment": info["comment"],
+        })
+
+    return sorted(slots, key=lambda x: x["time"])
+
+
+async def create_booking_by_admin(  # (я добавил)
+    db: AsyncSession,
+    booking_in: "AdminSlotBookIn",
+) -> Booking:
+    """Создать бронь из админки (admin/client)."""  # (я добавил)
+
+    start = booking_in.start_time
+    if start is None:
+        raise HTTPException(status_code=400, detail="Start time is required")
+
+    await _get_service(db, booking_in.service_id)
+
+    exists = await db.execute(
+        select(Booking).where(
+            Booking.service_id == booking_in.service_id,
+            Booking.start_time == start,
+            Booking.status.in_(
+                [BookingStatus.PENDING.value, BookingStatus.ACTIVE.value]
+            ),
+        )
+    )
+    if exists.scalar_one_or_none():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Slot already booked",
+        )
+
+    if booking_in.mode == "admin":
+        guest_name = "Админ"  # (я добавил)
+        guest_phone = "—"  # (я добавил)
+        guest_email = None  # (я добавил)
+        created_by_admin = True  # (я добавил)
+        admin_comment = booking_in.comment  # (я добавил)
+    else:
+        guest_name = booking_in.guest_name or ""  # (я добавил)
+        guest_phone = booking_in.guest_phone or ""  # (я добавил)
+        guest_email = booking_in.guest_email  # (я добавил)
+        created_by_admin = True  # (я добавил)
+        admin_comment = booking_in.comment  # (я добавил)
+
+        if not guest_name.strip() or not guest_phone.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="guest_name и guest_phone обязательны для брони за клиента",
+            )
+
+    booking = Booking(
+        user_id=None,
+        service_id=booking_in.service_id,
+        start_time=start,
+        status=BookingStatus.ACTIVE.value,  # (я добавил) сразу активная в админке
+        guest_name=guest_name,
+        guest_phone=guest_phone,
+        guest_email=guest_email,
+        created_by_admin=created_by_admin,
+        admin_comment=admin_comment,
+    )
+
+    db.add(booking)
+    await db.commit()
+    await db.refresh(booking)
+
+    cache_key = f"free_slots:{start.date()}:{booking.service_id}"
+    await redis.delete(cache_key)
 
     return booking
