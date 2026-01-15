@@ -144,13 +144,19 @@ jobs:
 
             cd ~/FOMINYH_WEBSITE
 
-            echo "Update repository"
+            echo "=== COMMIT BEFORE ==="
+            git rev-parse HEAD
+
             git fetch origin
             git reset --hard origin/main
 
-            echo "Restart containers"
-            docker compose down
-            docker compose up -d --build
+            echo "=== COMMIT AFTER ==="
+            git rev-parse HEAD
 
-            echo "Deploy completed"
+            echo "=== REBUILD CONTAINERS (NO CACHE) ==="
+            docker compose down
+            docker compose build --no-cache
+            docker compose up -d
+
+            echo "=== DEPLOY FINISHED ==="
           EOF
