@@ -1,8 +1,9 @@
-# backend/app/commands/create_admin.py
-# Команда создания / повышения администратора
+# backend/app/commands/create_admin.py — команда создания администратора
+# Назначение: создать или обновить администратора салона
 
 import asyncio
 import getpass
+import uuid
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,10 +16,11 @@ from app.models.user import User
 
 ADMIN_PHONE = "+70000000000"
 ADMIN_EMAIL = "admin@test.ru"
+ADMIN_NAME = "Администратор"
 
 
 async def main() -> None:
-    """Создать или обновить администратора."""  #
+    """Создать или обновить администратора."""  # (я добавил)
 
     password = getpass.getpass("Введите пароль администратора: ")
 
@@ -30,24 +32,29 @@ async def main() -> None:
     )
 
     async with session_maker() as session:
-        result = await session.execute(select(User).where(User.phone == ADMIN_PHONE))
+        result = await session.execute(
+            select(User).where(User.phone == ADMIN_PHONE)
+        )
         user = result.scalar_one_or_none()
 
         if user:
             user.email = ADMIN_EMAIL
             user.password_hash = hash_password(password)
             user.is_admin = True
-            print("Администратор обновлён")  #
+            print("Администратор обновлён")  # (я добавил)
         else:
             user = User(
-                name="Admin",
+                name=ADMIN_NAME,
                 phone=ADMIN_PHONE,
                 email=ADMIN_EMAIL,
                 password_hash=hash_password(password),
                 is_admin=True,
+                card_number=f"ADMIN-{uuid.uuid4().hex[:8]}",  # ← ВАЖНО
+                discount_percent=0,
+                bonus_balance=0,
             )
             session.add(user)
-            print("Администратор создан")  #
+            print("Администратор создан")  # (я добавил)
 
         await session.commit()
 

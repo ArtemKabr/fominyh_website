@@ -1,0 +1,73 @@
+/* frontend/src/pages/Register/register.css — стили страницы регистрации */
+/* Назначение: форма регистрации пользователя */
+
+.register {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+}
+
+.register__card {
+    width: 100%;
+    max-width: 480px;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+.register__title {
+    font-size: 28px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.register__form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.register__form input {
+    height: 46px;
+    padding: 0 14px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    font-size: 15px;
+}
+
+.register__form input:focus {
+    outline: none;
+    border-color: #b89c7d;
+}
+
+.register__form button {
+    margin-top: 12px;
+    height: 48px;
+    border-radius: 12px;
+    border: none;
+    background: #b89c7d;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.register__form button:hover {
+    background: #a8896a;
+}
+
+.register__hint {
+    margin-top: 18px;
+    font-size: 13px;
+    text-align: center;
+    color: #777;
+}
+
+.register__hint a {
+    color: #b89c7d;
+    text-decoration: none;
+}

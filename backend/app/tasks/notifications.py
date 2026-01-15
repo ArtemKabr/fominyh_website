@@ -2,10 +2,12 @@
 # Назначение: уведомления пользователям и админу (Telegram / email)
 
 import asyncio
+from datetime import datetime, timedelta
 
-from celery import shared_task
+from sqlalchemy import select  # (я добавил)
 
-from app.core.database import async_session_maker
+from app.core.celery_app import celery_app
+from app.core.database import get_async_session
 from app.models.booking import Booking, BookingStatus
 from app.models.user import User
 from app.models.service import Service
@@ -18,9 +20,8 @@ from app.core.settings import settings
 
 
 async def _get_booking_context(booking_id: int):
-    """Загрузить связанные данные для уведомлений."""  #
-
-    async with async_session_maker() as session:
+    """Загрузить связанные данные для уведомлений."""  # (я добавил)
+    async for session in get_async_session():
         booking = await session.get(Booking, booking_id)
         if not booking:
             return None
@@ -32,14 +33,12 @@ async def _get_booking_context(booking_id: int):
 
 
 async def _send_telegram(chat_id: int, text: str) -> None:
-    """Отправка сообщения в Telegram (заглушка)."""  #
-    # TODO: подключить aiogram / requests
+    """Отправка сообщения в Telegram (заглушка)."""  # (я добавил)
     print(f"[telegram] chat_id={chat_id}: {text}")
 
 
 async def _send_email(email: str, subject: str, body: str) -> None:
-    """Отправка email (заглушка)."""  #
-    # TODO: SMTP / SendGrid
+    """Отправка email (заглушка)."""  # (я добавил)
     print(f"[email] to={email}: {subject}")
 
 
@@ -48,13 +47,13 @@ async def _send_email(email: str, subject: str, body: str) -> None:
 # -------------------------------------------------
 
 
-@shared_task(
+@celery_app.task(
     bind=True,
     autoretry_for=(Exception,),
     retry_kwargs={"max_retries": 3, "countdown": 10},
 )
 def send_booking_created(self, booking_id: int) -> None:
-    """Уведомление о создании записи."""  #
+    """Уведомление о создании записи."""  # (я добавил)
 
     async def _run():
         ctx = await _get_booking_context(booking_id)
@@ -66,15 +65,13 @@ def send_booking_created(self, booking_id: int) -> None:
         text = (
             f"📌 Новая запись\n"
             f"Услуга: {service.name}\n"
-            f"Дата: {booking.start_time:%d.%m.%Y %H:%M}\n"
+            f"Дата: {booking.start_at:%d.%m.%Y %H:%M}\n"
             f"Телефон: {user.phone}"
         )
 
-        # админу
         if settings.admin_telegram_chat_id:
             await _send_telegram(settings.admin_telegram_chat_id, text)
 
-        # пользователю
         if user.telegram_chat_id:
             await _send_telegram(user.telegram_chat_id, "✅ Вы успешно записались")
 
@@ -82,7 +79,7 @@ def send_booking_created(self, booking_id: int) -> None:
             await _send_email(
                 user.email,
                 "Запись подтверждена",
-                f"Вы записаны на {service.name} {booking.start_time:%d.%m.%Y %H:%M}",
+                f"Вы записаны на {service.name} {booking.start_at:%d.%m.%Y %H:%M}",
             )
 
     asyncio.run(_run())
@@ -93,9 +90,9 @@ def send_booking_created(self, booking_id: int) -> None:
 # -------------------------------------------------
 
 
-@shared_task(bind=True)
+@celery_app.task(bind=True)
 def send_booking_canceled(self, booking_id: int) -> None:
-    """Уведомление об отмене записи."""  #
+    """Уведомление об отмене записи."""  # (я добавил)
 
     async def _run():
         ctx = await _get_booking_context(booking_id)
@@ -107,7 +104,7 @@ def send_booking_canceled(self, booking_id: int) -> None:
         text = (
             f"❌ Запись отменена\n"
             f"Услуга: {service.name}\n"
-            f"Дата: {booking.start_time:%d.%m.%Y %H:%M}"
+            f"Дата: {booking.start_at:%d.%m.%Y %H:%M}"
         )
 
         if user.telegram_chat_id:
@@ -124,9 +121,9 @@ def send_booking_canceled(self, booking_id: int) -> None:
 # -------------------------------------------------
 
 
-@shared_task(bind=True)
+@celery_app.task(bind=True)
 def send_booking_reminder(self, booking_id: int, hours: int) -> None:
-    """Напоминание о записи за N часов."""  #
+    """Напоминание о записи за N часов."""  # (я добавил)
 
     async def _run():
         ctx = await _get_booking_context(booking_id)
@@ -142,10 +139,38 @@ def send_booking_reminder(self, booking_id: int, hours: int) -> None:
             f"⏰ Напоминание\n"
             f"Через {hours} ч. у вас запись:\n"
             f"{service.name}\n"
-            f"{booking.start_time:%d.%m.%Y %H:%M}"
+            f"{booking.start_at:%d.%m.%Y %H:%M}"
         )
 
         if user.telegram_chat_id:
             await _send_telegram(user.telegram_chat_id, text)
+
+    asyncio.run(_run())
+
+
+# -------------------------------------------------
+# ПРОВЕРКА БЛИЖАЙШИХ ЗАПИСЕЙ (beat)
+# -------------------------------------------------
+
+
+@celery_app.task(name="app.tasks.notifications.check_upcoming_bookings")
+def check_upcoming_bookings() -> None:
+    """Поиск записей для напоминаний."""  # (я добавил)
+
+    async def _run():
+        now = datetime.now()
+        notify_at = now + timedelta(minutes=5)
+
+        async for session in get_async_session():
+            result = await session.execute(
+                select(Booking).where(
+                    Booking.status == BookingStatus.ACTIVE.value,
+                    Booking.start_at >= now,
+                    Booking.start_at <= notify_at,
+                )
+            )
+
+            for booking in result.scalars().all():
+                send_booking_reminder.delay(booking.id, hours=2)
 
     asyncio.run(_run())

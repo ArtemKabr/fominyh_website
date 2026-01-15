@@ -1,4 +1,6 @@
 # backend/tests/test_services.py — тесты услуг
+# Назначение: создание и получение услуг с обязательными slug/category
+
 import pytest
 
 
@@ -10,6 +12,8 @@ async def test_create_service(client):
             "name": "Массаж лица",
             "price": 3000,
             "duration_minutes": 60,
+            "slug": "massage-face",  # (я добавил)
+            "category": "face",      # (я добавил)
         },
     )
     assert r.status_code == 201

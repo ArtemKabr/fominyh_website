@@ -1,18 +1,18 @@
 # backend/app/api/services.py — эндпоинты услуг
-# Назначение: публичное API услуг
+# Назначение: публичное API услуг (список + получение по slug)
 
-from fastapi import APIRouter, Depends, status, HTTPException  #
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-import json  #
+import json
 
 from app.core.database import get_async_session
 from app.schemas.service import ServiceCreate, ServiceRead
 from app.services.service import (
     get_services,
     create_service,
-    get_service_by_slug,  #
+    get_service_by_slug,
 )
-from app.core.redis import redis  #
+from app.core.redis import redis
 
 router = APIRouter(
     prefix="/api/services",
@@ -26,19 +26,23 @@ router = APIRouter(
 )
 async def list_services(
     db: AsyncSession = Depends(get_async_session),
-):
-    """Список услуг."""  #
+) -> list[ServiceRead]:
+    """Список услуг."""
 
-    cache_key = "services:list"  #
-    cached = await redis.get(cache_key)  #
+    cache_key = "services:list"
+    cached = await redis.get(cache_key)
 
     if cached:
-        return json.loads(cached)  #
+        return json.loads(cached)
 
     services = await get_services(db)
-    data = [ServiceRead.model_validate(s).model_dump() for s in services]  #
 
-    await redis.set(cache_key, json.dumps(data), ex=300)  # 5 минут
+    data = [
+        ServiceRead.model_validate(service).model_dump()
+        for service in services
+    ]
+
+    await redis.set(cache_key, json.dumps(data), ex=300)  # 5 минут (я добавил)
     return data
 
 
@@ -50,15 +54,41 @@ async def get_service_by_slug_api(
     slug: str,
     db: AsyncSession = Depends(get_async_session),
 ) -> ServiceRead:
-    """Получить услугу по slug."""  #
+    """Получить услугу по slug."""  # (я добавил)
 
     service = await get_service_by_slug(db, slug)
-    if not service:
+
+    if service is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Услуга не найдена",
         )
-    return ServiceRead.model_validate(service)  #
+
+    return ServiceRead.model_validate(service)
+
+
+@router.get(
+    "/{slug}",
+    response_model=ServiceRead,
+)
+async def get_service_by_slug_api_alias(
+    slug: str,
+    db: AsyncSession = Depends(get_async_session),
+) -> ServiceRead:
+    """
+    Alias для фронта.
+    Позволяет обращаться /api/services/{slug}
+    """  # (я добавил)
+
+    service = await get_service_by_slug(db, slug)
+
+    if service is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Услуга не найдена",
+        )
+
+    return ServiceRead.model_validate(service)
 
 
 @router.post(
@@ -70,5 +100,11 @@ async def add_service(
     service_in: ServiceCreate,
     db: AsyncSession = Depends(get_async_session),
 ) -> ServiceRead:
-    """Создание услуги."""  #
-    return await create_service(db, service_in)
+    """Создание услуги."""  # (я добавил)
+
+    service = await create_service(db, service_in)
+
+    # сбрасываем кеш списка услуг (я добавил)
+    await redis.delete("services:list")
+
+    return ServiceRead.model_validate(service)

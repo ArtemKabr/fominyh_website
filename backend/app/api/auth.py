@@ -1,14 +1,14 @@
-# backend/app/api/auth.py — простая авторизация
-# Назначение: регистрация и логин без JWT
+# backend/app/api/auth.py — регистрация и вход
+# Назначение: простая авторизация БЕЗ JWT
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.core.database import get_async_session
 from app.core.passwords import hash_password, verify_password
 from app.models.user import User
-from app.schemas.auth import RegisterIn, LoginIn  # (я использую существующие)
+from app.schemas.auth import RegisterIn, LoginIn
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -20,16 +20,12 @@ async def register(
 ):
     """Регистрация пользователя."""
 
-    if not data.name or not data.phone:  #
+    exists = await db.execute(
+        select(User).where(User.email == data.email)
+    )
+    if exists.scalar_one_or_none():
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="name и phone обязательны",
-        )
-
-    res = await db.execute(select(User).where(User.email == data.email))
-    if res.scalar_one_or_none():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail="Пользователь уже существует",
         )
 
@@ -38,14 +34,15 @@ async def register(
         phone=data.phone,
         email=data.email,
         password_hash=hash_password(data.password),
+        card_number=f"CARD-{data.phone[-6:]}",  # (я добавил)
     )
+
     db.add(user)
     await db.commit()
     await db.refresh(user)
 
     return {
-        "id": user.id,
-        "email": user.email,
+        "user_id": user.id,  # (я добавил)
     }
 
 
@@ -54,21 +51,49 @@ async def login(
     data: LoginIn,
     db: AsyncSession = Depends(get_async_session),
 ):
-    """Логин пользователя."""
+    """Вход пользователя."""
 
-    res = await db.execute(select(User).where(User.email == data.email))
+    res = await db.execute(
+        select(User).where(User.email == data.email)
+    )
     user = res.scalar_one_or_none()
 
-    if not user or not verify_password(data.password, user.password_hash):
+    if not user or not user.password_hash:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Неверный email или пароль",
+        )
+
+    if not verify_password(data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Неверный email или пароль",
         )
 
     return {
+        "user_id": user.id,  # (я добавил)
+    }
+
+
+@router.get("/me")
+async def auth_me(
+    x_user_id: int = Header(
+        ...,
+        alias="X-User-Id",
+        convert_underscores=False,  # (я добавил)
+    ),
+    db: AsyncSession = Depends(get_async_session),
+):
+    """Текущий пользователь (роль)."""
+
+    user = await db.get(User, x_user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Пользователь не найден",
+        )
+
+    return {
         "id": user.id,
-        "email": user.email,
-        "name": user.name,
-        "phone": user.phone,
         "is_admin": user.is_admin,
     }
