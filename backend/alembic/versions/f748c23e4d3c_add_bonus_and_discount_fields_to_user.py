@@ -1,7 +1,7 @@
 """add bonus and discount fields to user
 
 Revision ID: f748c23e4d3c
-Revises: xxxx
+Revises: x40c886012c21
 Create Date: 2026-01-14 13:19:18.958949
 
 """
@@ -11,9 +11,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-# revision identifiers, used by Alembic.
-revision: str = 'f748c23e4d3c'
-down_revision: Union[str, Sequence[str], None] = 'xxxx'
+revision: str = "f748c23e4d3c"
+down_revision: Union[str, Sequence[str], None] = "40c886012c21"  # (я добавил)
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

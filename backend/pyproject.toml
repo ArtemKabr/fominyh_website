@@ -21,9 +21,7 @@ redis = "^5.0.1"
 python-jose = { extras = ["cryptography"], version = "^3.3.0" }
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 bcrypt = "<4.0"
-email-validator = "^2.1.0"
 pydantic = {extras = ["email"], version = "^2.12.5"}
-fastapi-mail = "^1.6.1"
 aiogram = "^3.24.0"
 python-dotenv = "^1.2.1"
 python-multipart = "^0.0.21"

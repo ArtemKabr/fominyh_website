@@ -16,6 +16,8 @@ from app.schemas.booking import BookingCreate
 from app.core.redis import redis
 from app.core.settings import settings
 
+from app.bot.utils.notify_admin import notify_admin_new_booking
+
 
 # -------------------------------------------------
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -159,6 +161,12 @@ async def create_booking(
     db.add(booking)
     await db.commit()
     await db.refresh(booking)
+
+    if not settings.testing:
+        try:
+            await notify_admin_new_booking(booking)  # (я добавил)
+        except Exception:
+            pass
 
     cache_key = f"free_slots:{start.date()}:{booking.service_id}"
     await redis.delete(cache_key)
