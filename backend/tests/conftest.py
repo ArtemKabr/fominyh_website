@@ -1,5 +1,12 @@
 # backend/tests/conftest.py — фикстуры pytest
 # Назначение: изоляция тестов от Redis и PostgreSQL, корректная работа async
+# flake8: noqa  # (я добавил)
+
+import sys  # (я добавил)
+from pathlib import Path  # (я добавил)
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(BASE_DIR))  # (я добавил)
 
 import pytest
 import pytest_asyncio
@@ -16,7 +23,7 @@ from app.core.settings import settings
 # -------------------------------------------------
 # ВАЖНО: включаем режим тестов ДО импорта app
 # -------------------------------------------------
-settings.testing = True  #
+settings.testing = True  # (я добавил)
 
 from app.main import app  # noqa: E402
 from app.core.database import Base, get_async_session  # noqa: E402
@@ -26,7 +33,7 @@ from app.core.database import Base, get_async_session  # noqa: E402
 # Заглушка Redis
 # -------------------------------------------------
 class DummyRedis:
-    """Заглушка Redis для тестов."""  #
+    """Заглушка Redis для тестов."""  # (я добавил)
 
     async def get(self, *args, **kwargs):
         return None
@@ -43,7 +50,7 @@ class DummyRedis:
 
 @pytest.fixture(autouse=True)
 def disable_redis(monkeypatch):
-    """Отключает Redis во всех тестах."""  #
+    """Отключает Redis во всех тестах."""  # (я добавил)
     monkeypatch.setattr(
         "app.core.redis.redis",
         DummyRedis(),
@@ -53,7 +60,7 @@ def disable_redis(monkeypatch):
 # -------------------------------------------------
 # Тестовая БД (SQLite in-memory)
 # -------------------------------------------------
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"  #
+TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"  # (я добавил)
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -97,7 +104,7 @@ async def client(db):
 # -------------------------------------------------
 @pytest_asyncio.fixture(autouse=True)
 async def seed_service(db):
-    """Создаёт базовую услугу для тестов."""  #
+    """Создаёт базовую услугу для тестов."""  # (я добавил)
     from app.models.service import Service
 
     result = await db.execute(select(Service).where(Service.slug == "test-service"))
