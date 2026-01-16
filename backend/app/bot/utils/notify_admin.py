@@ -1,7 +1,7 @@
-# backend/app/bot/utils/notify_admin.py
-# Назначение: уведомление админа о новой записи
+# backend/app/bot/utils/notify_admin.py — уведомление админа о новой записи
+# Назначение: отправка уведомлений администратору в Telegram
 
-from app.bot.bot import bot
+from app.bot.bot import get_bot
 from app.bot.keyboards.admin import admin_confirm_booking_kb
 from app.core.settings import settings
 from app.models.booking import Booking
@@ -9,6 +9,10 @@ from app.models.booking import Booking
 
 async def notify_admin_new_booking(booking: Booking) -> None:
     """Отправить админу новую запись."""  # (я добавил)
+
+    bot = get_bot()  # (я добавил)
+    if not bot:  # (я добавил)
+        return  # (я добавил)
 
     text = (
         "📅 Новая запись с сайта\n\n"
