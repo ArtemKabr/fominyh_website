@@ -13,6 +13,7 @@ from app.services.service import (
     get_service_by_slug,
 )
 from app.core.redis import redis
+from app.services.services_marketing import load_services_marketing
 
 router = APIRouter(
     prefix="/api/services",
@@ -65,6 +66,12 @@ async def get_service_by_slug_api(
         )
 
     return ServiceRead.model_validate(service)
+
+
+@router.get("/marketing")
+def get_services_marketing():
+    """Маркетинговые описания услуг."""  # (я добавил)
+    return load_services_marketing()
 
 
 @router.get(

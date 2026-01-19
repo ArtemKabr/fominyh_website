@@ -1,26 +1,33 @@
 # backend/app/bot/bot.py — инициализация Telegram-бота
-# Назначение: ленивое создание бота, безопасно для тестов
 
-from aiogram import Bot
+from aiogram import Bot, Dispatcher
 from app.core.settings import settings
 
-bot: Bot | None = None  # (я добавил)
+_bot: Bot | None = None
+_dp: Dispatcher | None = None
 
 
 def get_bot() -> Bot | None:
-    """
-    Возвращает экземпляр Telegram-бота.
-    В тестах и при отсутствии токена возвращает None.
-    """
-    global bot
+    """Вернуть Telegram-бота."""
+    global _bot
 
-    if settings.testing:  # (я добавил)
+    if settings.testing:
         return None
 
-    if not settings.telegram_api_token:  # (я добавил)
+    if not settings.telegram_api_token:
         return None
 
-    if bot is None:
-        bot = Bot(token=settings.telegram_api_token)
+    if _bot is None:
+        _bot = Bot(token=settings.telegram_api_token)
 
-    return bot
+    return _bot
+
+
+def get_dispatcher() -> Dispatcher | None:
+    """Вернуть Dispatcher."""
+    global _dp
+
+    if _dp is None:
+        _dp = Dispatcher()
+
+    return _dp

@@ -10,13 +10,14 @@ from app.core.database import async_session_maker
 from app.models.user import User
 from app.bot.states.user import UserRegister
 from app.bot.keyboards.user import user_main_menu_kb
+from app.models.booking import Booking, BookingStatus
 
 router = Router()
 
 
 @router.message(UserRegister.waiting_for_phone, F.text)
 async def phone_handler(message: Message, state: FSMContext) -> None:
-    """Сохраняем телефон пользователя с проверкой UNIQUE."""  # (я добавил)
+    """Сохраняем телефон пользователя с привязкой записей."""  # (я добавил)
 
     phone = message.text.strip()
     telegram_chat_id = message.from_user.id
@@ -31,7 +32,6 @@ async def phone_handler(message: Message, state: FSMContext) -> None:
             await state.clear()
             return
 
-        # если номер уже сохранён у этого пользователя
         if user.phone == phone:
             await state.clear()
             await message.answer(
@@ -40,7 +40,6 @@ async def phone_handler(message: Message, state: FSMContext) -> None:
             )
             return
 
-        # проверка: номер занят другим пользователем
         exists = await session.scalar(
             select(User).where(User.phone == phone, User.id != user.id)
         )
@@ -51,11 +50,36 @@ async def phone_handler(message: Message, state: FSMContext) -> None:
             )
             return
 
-        user.phone = phone
-        await session.commit()
+        # ищем записи, созданные ранее с сайта
+        bookings = (
+            await session.execute(
+                select(Booking)
+                .join(User, User.id == Booking.user_id)
+                .where(
+                    User.phone == phone,
+                    User.telegram_chat_id.is_(None),
+                    Booking.status == BookingStatus.PENDING.value,
+                )
+            )
+        ).scalars().all()  # (я добавил)
+
+        # сохраняем телефон Telegram-пользователю
+        user.phone = phone  # (я добавил)
+
+        # привязываем старые записи
+        for booking in bookings:
+            booking_user = await session.get(User, booking.user_id)
+            booking_user.telegram_chat_id = telegram_chat_id  # (я добавил)
+
+        await session.commit()  # (я добавил)
 
     await state.clear()
     await message.answer(
-        "✅ Номер сохранён.\n\nВыберите действие:",
+        f"✅ Номер сохранён.\n\n"
+        f"Найдено записей: {len(bookings)}.\n"
+        "⏳ Запись ещё не подтверждена администратором.\n"
+        "В ближайшее время администратор проверит её.\n"
+        "После подтверждения вам придёт сообщение в Telegram.\n\n"
+        "Выберите действие:",
         reply_markup=user_main_menu_kb(),
     )

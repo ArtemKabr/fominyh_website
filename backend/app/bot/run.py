@@ -1,16 +1,21 @@
 # backend/app/bot/run.py — запуск Telegram-бота
-# Назначение: точка входа
 
 import asyncio
+from app.bot.bot import get_bot, get_dispatcher
+from app.bot.handlers import user_start, user_phone, admin_confirm  # (я добавил)
 
-from app.bot.bot import bot, dp
-from app.bot.dispatcher import setup_dispatcher
 
+async def main():
+    bot = get_bot()
+    dp = get_dispatcher()
 
-async def main() -> None:
-    """Запуск бота."""  # (я добавил)
+    if not bot or not dp:
+        return
 
-    setup_dispatcher(dp)
+    dp.include_router(user_start.router)   # (я добавил)
+    dp.include_router(user_phone.router)   # (я добавил)
+    dp.include_router(admin_confirm.router)
+
     await dp.start_polling(bot)
 
 

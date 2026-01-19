@@ -1,22 +1,19 @@
-# app/services/telegram.py — отправка сообщений в Telegram
+# backend/app/services/telegram.py — отправка сообщений в Telegram
+# Назначение: единая функция для celery и бота
 
-import httpx
+from aiogram import Bot
 from app.core.settings import settings
 
+_bot: Bot | None = None
 
-async def send_telegram_message(chat_id: str, text: str) -> None:
-    """Отправить сообщение в Telegram."""  #
 
-    if not settings.telegram_bot_token:
-        return
+def get_bot() -> Bot:
+    global _bot
+    if _bot is None:
+        _bot = Bot(token=settings.telegram_api_token)
+    return _bot
 
-    url = f"https://api.telegram.org/bot{settings.telegram_bot_token}/sendMessage"
 
-    async with httpx.AsyncClient(timeout=10) as client:
-        await client.post(
-            url,
-            json={
-                "chat_id": chat_id,
-                "text": text,
-            },
-        )
+async def send_telegram_message(chat_id: int, text: str) -> None:
+    bot = get_bot()
+    await bot.send_message(chat_id=chat_id, text=text)

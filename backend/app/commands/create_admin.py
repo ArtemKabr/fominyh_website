@@ -1,4 +1,7 @@
 # backend/app/commands/create_admin.py — команда создания администратора
+# зайти в контенер бекенда
+# docker exec -it fominyh_backend bash
+# и запустить команду python -m app.commands.create_admin
 # Назначение: создать или обновить администратора салона
 
 import asyncio
@@ -14,8 +17,8 @@ from app.core.passwords import hash_password
 from app.models.user import User
 
 
-ADMIN_PHONE = "+70000000000"
-ADMIN_EMAIL = "admin@test.ru"
+ADMIN_PHONE = "+79811221756"
+ADMIN_EMAIL = "admin@mail.ru"
 ADMIN_NAME = "Администратор"
 
 

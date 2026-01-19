@@ -27,12 +27,12 @@ type Dashboard = {
 };
 
 type Booking = {
-    id: number;
-    service_name: string;
-    price: number;
-    duration_minutes: number;
-    start_at: string;
-    status: string;
+  id: number;
+  start_time: string;
+  status: string;
+  service: { id: number; name: string; price: number };
+  user: { id: number; name: string; phone: string; email: string };
+  comment: string | null; // (я добавил)
 };
 
 export function AccountPage() {

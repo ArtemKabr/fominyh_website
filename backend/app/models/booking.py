@@ -6,7 +6,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import DateTime, ForeignKey, String, Boolean  # (я добавил)
+from sqlalchemy import DateTime, ForeignKey, String, Boolean, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -38,7 +38,7 @@ class Booking(Base):
     user: Mapped[User | None] = relationship(
         "User",
         backref="bookings",
-    )  # (я добавил)
+    )
 
     service_id: Mapped[int] = mapped_column(
         ForeignKey("services.id"),
@@ -48,7 +48,7 @@ class Booking(Base):
     service: Mapped[Service] = relationship(
         "Service",
         backref="bookings",
-    )  # (я добавил)
+    )
 
     # В БД колонка start_at, в коде используем start_time
     start_time: Mapped[datetime] = mapped_column(
@@ -76,15 +76,20 @@ class Booking(Base):
     guest_name: Mapped[str | None] = mapped_column(
         String(100),
         nullable=True,
-    )  # (я добавил)
+    )
 
     guest_phone: Mapped[str | None] = mapped_column(
         String(20),
         nullable=True,
-    )  # (я добавил)
+    )
 
     guest_email: Mapped[str | None] = mapped_column(
         String(255),
+        nullable=True,
+    )
+
+    guest_comment: Mapped[str | None] = mapped_column(
+        Text,
         nullable=True,
     )  # (я добавил)
 
@@ -92,9 +97,9 @@ class Booking(Base):
         Boolean,
         default=False,
         nullable=False,
-    )  # (я добавил)
+    )
 
     admin_comment: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
-    )  # (я добавил)
+    )

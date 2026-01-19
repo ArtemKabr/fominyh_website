@@ -16,6 +16,7 @@ from app.bot.states.booking import BookingFlow
 from app.bot.keyboards.booking import services_kb, dates_kb, slots_kb
 from app.bot.keyboards.user import user_main_menu_kb
 from app.services.booking import get_free_slots
+from app.bot.utils.notify_admin import notify_admin_new_booking
 
 router = Router()
 
@@ -135,6 +136,10 @@ async def choose_slot(cb: CallbackQuery, state: FSMContext) -> None:
 
         session.add(booking)
         await session.commit()
+        await session.refresh(booking)  # (я добавил)
+
+    # уведомляем администратора
+    await notify_admin_new_booking(booking)  # (я добавил)
 
     await state.clear()
     await cb.message.edit_text(

@@ -5,13 +5,17 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 
 def admin_confirm_booking_kb(booking_id: int) -> InlineKeyboardMarkup:
-    """Кнопки подтверждения записи."""  # (я добавил)
+    """Кнопки подтверждения / отмены записи."""  # (я добавил)
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
                     text="✅ Подтвердить",
                     callback_data=f"admin:confirm:{booking_id}",
+                ),
+                InlineKeyboardButton(
+                    text="❌ Отменить",
+                    callback_data=f"admin:cancel:{booking_id}",
                 ),
             ]
         ]

@@ -17,11 +17,18 @@ type Booking = {
         phone: string;
         email: string | null;
     };
+    comment: string | null;
 };
 
 type DaySlot = {
     time: string;
     status: "free" | "booked";
+};
+
+type Service = {
+    id: number;
+    name: string;
+    duration_minutes: number;
 };
 
 function toYmd(d: Date) {
@@ -31,19 +38,19 @@ function toYmd(d: Date) {
     return `${y}-${m}-${dd}`;
 }
 
+const todayYmd = toYmd(new Date()); // (я добавил)
+
+
 export function SlotsPage() {
     const userId = localStorage.getItem("user_id") || "";
-    const serviceId = 1; // фикс, как было
+
+    const [services, setServices] = useState<Service[]>([]);
+    const [serviceId, setServiceId] = useState<number | null>(null);
 
     const [month, setMonth] = useState(() => {
         const d = new Date();
         return new Date(d.getFullYear(), d.getMonth(), 1);
     });
-
-    // модалка переноса (я добавил)
-    const [rescheduleId, setRescheduleId] = useState<number | null>(null); // (я добавил)
-    const [rescheduleDay, setRescheduleDay] = useState<string>(""); // (я добавил)
-    const [rescheduleTime, setRescheduleTime] = useState<string>(""); // (я добавил)
 
     const [busy, setBusy] = useState<Record<string, number>>({});
     const [selectedDay, setSelectedDay] = useState<string>("");
@@ -51,14 +58,17 @@ export function SlotsPage() {
     const [dayBookings, setDayBookings] = useState<Booking[]>([]);
     const [daySlots, setDaySlots] = useState<DaySlot[]>([]);
 
-    const [mode, setMode] = useState<"admin" | "client" | null>(null); // (я добавил)
-    const [selectedSlots, setSelectedSlots] = useState<string[]>([]); // (я добавил)
+    const [mode, setMode] = useState<"admin" | "client" | null>(null);
+    const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
 
-    // ---- форма для клиента (я добавил) ----
-    const [guestName, setGuestName] = useState<string>(""); // (я добавил)
-    const [guestPhone, setGuestPhone] = useState<string>(""); // (я добавил)
-    const [guestEmail, setGuestEmail] = useState<string>(""); // (я добавил)
-    const [comment, setComment] = useState<string>(""); // (я добавил)
+    const [guestName, setGuestName] = useState("");
+    const [guestPhone, setGuestPhone] = useState("");
+    const [guestEmail, setGuestEmail] = useState("");
+    const [comment, setComment] = useState("");
+
+    // --- ДОБАВЛЕНО: перенос ---
+    const [rescheduleId, setRescheduleId] = useState<number | null>(null); // (я добавил)
+    const [rescheduleTime, setRescheduleTime] = useState<string>(""); // (я добавил)
 
     const monthDays = useMemo(() => {
         const y = month.getFullYear();
@@ -66,6 +76,43 @@ export function SlotsPage() {
         const last = new Date(y, m + 1, 0).getDate();
         return Array.from({length: last}, (_, i) => new Date(y, m, i + 1));
     }, [month]);
+
+    // -----------------------
+    // ЗАГРУЗКА ДАННЫХ
+    // -----------------------
+
+    const loadServices = async () => {
+        const res = await fetch("/api/services");
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : [];
+        setServices(list);
+
+        if (list.length > 0 && serviceId === null) {
+            setServiceId(list[0].id); // (я добавил)
+        }
+    };
+
+
+    const cancelBooking = async (id: number) => {
+        const res = await fetch(`/api/admin/bookings/${id}/cancel`, {
+            method: "POST",
+            headers: {"X-User-Id": userId},
+        });
+
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            alert((data as any)?.detail || "Ошибка удаления"); // (я добавил)
+            return; // (я добавил)
+        }
+
+        if (selectedDay) {
+            await loadDay(selectedDay);
+        }
+        await loadCalendar();
+    };
+
 
     const loadCalendar = async () => {
         const from = toYmd(new Date(month.getFullYear(), month.getMonth(), 1));
@@ -83,29 +130,52 @@ export function SlotsPage() {
     };
 
     const loadDay = async (day: string) => {
-        setSelectedDay(day);
+        setSelectedDay(day); // (я добавил)
         setSelectedSlots([]); // (я добавил)
         setMode(null); // (я добавил)
 
-        setGuestName(""); // (я добавил)
-        setGuestPhone(""); // (я добавил)
-        setGuestEmail(""); // (я добавил)
-        setComment(""); // (я добавил)
+        setGuestName("");
+        setGuestPhone("");
+        setGuestEmail("");
+        setComment("");
 
-        const resBookings = await fetch(`/api/admin/bookings/by-day?day=${day}`, {
-            headers: {"X-User-Id": userId},
-        });
-        const bookings: Booking[] = await resBookings.json();
-        setDayBookings(bookings.filter((x) => x.status !== "canceled"));
-
-        const resSlots = await fetch(
-            `/api/admin/slots?day=${day}&service_id=${serviceId}`,
+        const resBookings = await fetch(
+            `/api/admin/bookings/by-day?day=${day}`,
             {headers: {"X-User-Id": userId}}
         );
-        setDaySlots(await resSlots.json());
+
+        const rawBookings = await resBookings.json();
+        setDayBookings(
+            rawBookings.filter((b: Booking) => b.status !== "canceled")
+        );
+
+        const effectiveServiceId = serviceId ?? services[0]?.id ?? null; // (я добавил)
+        if (!effectiveServiceId) {
+            setDaySlots([]); // (я добавил)
+            return; // (я добавил)
+        }
+
+        const resSlots = await fetch(
+            `/api/admin/slots?day=${day}&service_id=${effectiveServiceId}`,
+            {headers: {"X-User-Id": userId}}
+        );
+
+        const slots = await resSlots.json();
+        setDaySlots(Array.isArray(slots) ? slots : []);
     };
 
+
+    // -----------------------
+    // ДЕЙСТВИЯ
+    // -----------------------
+
     const toggleSlot = (time: string) => {
+        // режим переноса (я добавил)
+        if (rescheduleId) {
+            setRescheduleTime(time); // (я добавил)
+            return;
+        }
+
         if (!mode) return;
 
         if (mode === "client") {
@@ -114,59 +184,17 @@ export function SlotsPage() {
         }
 
         setSelectedSlots((prev) =>
-            prev.includes(time) ? prev.filter((t) => t !== time) : [...prev, time]
+            prev.includes(time)
+                ? prev.filter((t) => t !== time)
+                : [...prev, time]
         );
-    };
-
-    const cancelBooking = async (id: number) => {
-        await fetch(`/api/admin/bookings/${id}/cancel`, {
-            method: "POST",
-            headers: {"X-User-Id": userId},
-        });
-
-        await loadDay(selectedDay); // (я добавил)
-        await loadCalendar(); // (я добавил)
-    };
-
-    const rescheduleBooking = (id: number) => {
-        setRescheduleId(id); // (я добавил)
-        setRescheduleDay(selectedDay); // (я добавил)
-        setRescheduleTime(""); // (я добавил)
-    };
-
-    // ---- подтвердить перенос (исправлено) ----
-    const submitReschedule = async () => {
-        if (!rescheduleId || !rescheduleDay || !rescheduleTime) return;
-
-        const qs = new URLSearchParams({
-            new_day: rescheduleDay,
-            new_time: rescheduleTime,
-        }).toString(); // (я добавил)
-
-        const res = await fetch(
-            `/api/admin/bookings/${rescheduleId}/reschedule?${qs}`,
-            {
-                method: "POST",
-                headers: {"X-User-Id": userId},
-            }
-        );
-
-        if (!res.ok) {
-            const data = await res.json().catch(() => ({})); // (я добавил)
-            alert((data as any)?.detail || "Ошибка переноса записи"); // (я добавил)
-            return;
-        }
-
-        setRescheduleId(null); // (я добавил)
-        setRescheduleTime(""); // (я добавил)
-
-        await loadDay(rescheduleDay); // (я добавил)
-        await loadCalendar(); // (я добавил)
     };
 
     const bookSelected = async () => {
-        if (mode === "client") {
-            if (!guestName.trim() || !guestPhone.trim()) return;
+        if (!serviceId || !selectedDay) return;
+
+        if (mode === "client" && (!guestName.trim() || !guestPhone.trim())) {
+            return;
         }
 
         for (const time of selectedSlots) {
@@ -181,11 +209,11 @@ export function SlotsPage() {
                     day: selectedDay,
                     time,
                     mode,
-                    guest_name: mode === "client" ? guestName.trim() : null, // (я добавил)
-                    guest_phone: mode === "client" ? guestPhone.trim() : null, // (я добавил)
+                    guest_name: mode === "client" ? guestName.trim() : null,
+                    guest_phone: mode === "client" ? guestPhone.trim() : null,
                     guest_email:
-                        mode === "client" ? guestEmail.trim() || null : null, // (я добавил)
-                    comment: comment.trim() || null, // (я добавил)
+                        mode === "client" ? guestEmail.trim() || null : null,
+                    comment: comment.trim() || null,
                 }),
             });
 
@@ -202,6 +230,50 @@ export function SlotsPage() {
         await loadDay(selectedDay);
         await loadCalendar();
     };
+
+    // --- ДОБАВЛЕНО: перенос ---
+    const rescheduleBooking = (id: number) => { // (я добавил)
+        setRescheduleId(id);
+        setRescheduleTime("");
+        setMode("admin");
+        setSelectedSlots([]);
+    };
+
+    const submitReschedule = async () => { // (я добавил)
+        if (!rescheduleId || !rescheduleTime || !selectedDay) return;
+
+        const qs = new URLSearchParams({
+            new_day: selectedDay,
+            new_time: rescheduleTime,
+        }).toString();
+
+        const res = await fetch(
+            `/api/admin/bookings/${rescheduleId}/reschedule?${qs}`,
+            {
+                method: "POST",
+                headers: {"X-User-Id": userId},
+            }
+        );
+
+        if (!res.ok) {
+            alert("Ошибка переноса записи");
+            return;
+        }
+
+        setRescheduleId(null);
+        setRescheduleTime("");
+
+        await loadDay(selectedDay);
+        await loadCalendar();
+    };
+
+    // -----------------------
+    // EFFECTS
+    // -----------------------
+
+    useEffect(() => {
+        loadServices();
+    }, []);
 
     useEffect(() => {
         loadCalendar();
@@ -257,8 +329,10 @@ export function SlotsPage() {
                         <button
                             key={day}
                             className={cls}
+                            disabled={day < todayYmd} // (я добавил)
                             onClick={() => loadDay(day)}
                         >
+
                             <div className="slot-day__num">{d.getDate()}</div>
                             {count > 0 && (
                                 <div className="slot-day__count">{count}</div>
@@ -268,7 +342,7 @@ export function SlotsPage() {
                 })}
             </div>
 
-            {selectedDay ? (
+            {selectedDay && (
                 <div className="slots__details">
                     <div className="slots__details-title">
                         Интервалы: {selectedDay}
@@ -278,13 +352,20 @@ export function SlotsPage() {
                         {daySlots.map((s) => (
                             <button
                                 key={s.time}
-                                disabled={s.status !== "free"}
+                                disabled={
+                                    s.status !== "free" ||
+                                    (mode === "client" && !serviceId)
+                                }
                                 className={
                                     "btn slot-time " +
+                                    (s.status === "booked" ? "slot-time--booked " : "") +
                                     (selectedSlots.includes(s.time)
                                         ? mode === "admin"
                                             ? "slot-time--admin"
                                             : "slot-time--client"
+                                        : "") +
+                                    (rescheduleTime === s.time
+                                        ? " slot-time--admin"
                                         : "")
                                 }
                                 onClick={() => toggleSlot(s.time)}
@@ -294,12 +375,34 @@ export function SlotsPage() {
                         ))}
                     </div>
 
+                    {/* подтверждение переноса */}
+                    {rescheduleId && rescheduleTime && (
+                        <div className="slot-actions__confirm">
+                            <div>Новое время: {rescheduleTime}</div>
+
+                            <button
+                                className="btn btn--primary"
+                                onClick={submitReschedule}
+                            >
+                                Подтвердить перенос
+                            </button>
+
+                            <button
+                                className="btn btn--ghost"
+                                onClick={() => {
+                                    setRescheduleId(null);
+                                    setRescheduleTime("");
+                                }}
+                            >
+                                Отменить
+                            </button>
+                        </div>
+                    )}
+
                     <div className="slot-actions">
                         <div className="slot-actions__modes">
                             <button
-                                className={`btn ${
-                                    mode === "admin" ? "btn--active" : ""
-                                }`}
+                                className={`btn ${mode === "admin" ? "btn--active" : ""}`}
                                 onClick={() => {
                                     setMode("admin");
                                     setSelectedSlots([]);
@@ -309,9 +412,7 @@ export function SlotsPage() {
                             </button>
 
                             <button
-                                className={`btn ${
-                                    mode === "client" ? "btn--active" : ""
-                                }`}
+                                className={`btn ${mode === "client" ? "btn--active" : ""}`}
                                 onClick={() => {
                                     setMode("client");
                                     setSelectedSlots([]);
@@ -319,6 +420,32 @@ export function SlotsPage() {
                             >
                                 Режим клиента
                             </button>
+
+                            {mode === "client" && (
+                                <div className="slots__service-select">
+                                    <label>Услуга</label>
+                                    <select
+                                        value={serviceId ?? ""}
+                                        onChange={async (e) => {
+                                            const id = Number(e.target.value);
+                                            setServiceId(id);
+                                            setSelectedSlots([]);
+                                            if (selectedDay) {
+                                                await loadDay(selectedDay);
+                                            }
+                                        }}
+                                    >
+                                        <option value="" disabled>
+                                            Выберите услугу
+                                        </option>
+                                        {services.map((s) => (
+                                            <option key={s.id} value={s.id}>
+                                                {s.name} ({s.duration_minutes} мин)
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
                         </div>
 
                         {mode === "client" && selectedSlots.length > 0 && (
@@ -350,7 +477,7 @@ export function SlotsPage() {
                             </div>
                         )}
 
-                        {selectedSlots.length > 0 && (
+                        {selectedSlots.length > 0 && !rescheduleId && (
                             <div className="slot-actions__confirm">
                                 <div>Время: {selectedSlots.join(", ")}</div>
 
@@ -359,7 +486,8 @@ export function SlotsPage() {
                                     onClick={bookSelected}
                                     disabled={
                                         mode === "client" &&
-                                        (!guestName.trim() ||
+                                        (!serviceId ||
+                                            !guestName.trim() ||
                                             !guestPhone.trim())
                                     }
                                 >
@@ -395,13 +523,10 @@ export function SlotsPage() {
                             </div>
 
                             <div className="admin-card__row">
-                                {new Date(b.start_time).toLocaleTimeString(
-                                    "ru-RU",
-                                    {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                    }
-                                )}
+                                {new Date(b.start_time).toLocaleTimeString("ru-RU", {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                })}
                             </div>
 
                             <div className="admin-card__row">
@@ -409,6 +534,12 @@ export function SlotsPage() {
                                 {b.user?.phone || "—"} •{" "}
                                 {b.user?.email || "—"}
                             </div>
+
+                            {b.comment && (
+                                <div className="admin-card__row admin-card__comment">
+                                    Комментарий: {b.comment}
+                                </div>
+                            )}
 
                             {b.status === "active" && (
                                 <div className="admin-card__actions">
@@ -421,9 +552,7 @@ export function SlotsPage() {
 
                                     <button
                                         className="btn btn--ghost"
-                                        onClick={() =>
-                                            rescheduleBooking(b.id)
-                                        }
+                                        onClick={() => rescheduleBooking(b.id)}
                                     >
                                         Перенести
                                     </button>
@@ -432,52 +561,7 @@ export function SlotsPage() {
                         </div>
                     ))}
                 </div>
-            ) : null}
-
-            {rescheduleId ? (
-                <div className="modal-backdrop">
-                    <div className="modal">
-                        <h3>Перенос записи</h3>
-
-                        <label>Дата</label>
-                        <input
-                            type="date"
-                            value={rescheduleDay}
-                            onChange={(e) =>
-                                setRescheduleDay(e.target.value)
-                            }
-                        />
-
-                        <label>Время</label>
-                        <input
-                            type="time"
-                            value={rescheduleTime}
-                            onChange={(e) =>
-                                setRescheduleTime(e.target.value)
-                            }
-                        />
-
-                        <div className="modal__actions">
-                            <button
-                                className="btn btn--primary"
-                                onClick={submitReschedule}
-                            >
-                                Сохранить
-                            </button>
-
-                            <button
-                                className="btn btn--ghost"
-                                onClick={() => {
-                                    setRescheduleId(null);
-                                    setRescheduleTime("");
-                                }}
-                            >
-                                Отмена
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            ) : null}
+            )}
         </div>
     );
 }

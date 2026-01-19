@@ -3,6 +3,7 @@
 
 import {useState, useEffect} from "react";
 import {useNavigate} from "react-router-dom";
+import {ServicesText} from "./ServicesText";
 import "./home.css";
 
 export function Home() {
@@ -195,6 +196,9 @@ export function Home() {
                 </div>
             </section>
 
+            {/* ТЕКСТ УСЛУГ */}
+            <ServicesText/> {/* (я добавил) */}
+
             {/* ОТЗЫВЫ */}
             <section className="home__section">
                 <div className="home__content">
@@ -301,6 +305,26 @@ export function Home() {
                         с нами для консультации и подбора процедуры.
                     </p>
 
+                    <p className="home__text home__telegram-info">
+                        После записи вы можете получать уведомления в Telegram.<br/>
+                        <span className="home__telegram-link">
+                <img
+                    src="/icons/telegram.svg"
+                    alt="Telegram"
+                    className="home__telegram-icon"
+                />
+                <a
+                    href="https://t.me/EF_Beauty_bot"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}  // (я добавил)
+                >
+    @EF_Beauty_bot
+</a>
+
+            </span>
+                    </p>  {/* (я добавил) */}
+
                     <button
                         className="home__cta home__cta--big"
                         onClick={() => navigate("/services")}
@@ -309,6 +333,7 @@ export function Home() {
                     </button>
                 </div>
             </section>
+
         </div>
     );
 }
