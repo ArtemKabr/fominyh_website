@@ -17,6 +17,7 @@ from app.api.admin_settings import router as admin_settings_router
 from app.api.user import router as user_router
 from app.startup import init_services_if_empty
 from app.api.reserve import router as reserve_router
+from app.api import admin_calendar
 
 
 # --------------------
@@ -89,6 +90,7 @@ app.include_router(auth_router)
 app.include_router(admin_settings_router)
 app.include_router(user_router)
 app.include_router(reserve_router)
+app.include_router(admin_calendar.router)
 
 
 # --------------------

@@ -12,7 +12,7 @@ from app.models.booking import Booking, BookingStatus
 from app.models.user import User
 from app.models.service import Service
 from app.core.settings import settings
-
+from app.services.telegram import send_telegram_message
 
 # -------------------------------------------------
 # ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
@@ -33,8 +33,8 @@ async def _get_booking_context(booking_id: int):
 
 
 async def _send_telegram(chat_id: int, text: str) -> None:
-    """Отправка сообщения в Telegram (заглушка)."""  # (я добавил)
-    print(f"[telegram] chat_id={chat_id}: {text}")
+    """Отправка сообщения в Telegram."""
+    await send_telegram_message(chat_id, text)  # (я добавил)
 
 
 async def _send_email(email: str, subject: str, body: str) -> None:
@@ -65,7 +65,7 @@ def send_booking_created(self, booking_id: int) -> None:
         text = (
             f"📌 Новая запись\n"
             f"Услуга: {service.name}\n"
-            f"Дата: {booking.start_at:%d.%m.%Y %H:%M}\n"
+            f"Дата: {booking.start_time:%d.%m.%Y %H:%M}\n"  # (я добавил)
             f"Телефон: {user.phone}"
         )
 
@@ -75,12 +75,11 @@ def send_booking_created(self, booking_id: int) -> None:
         if user.telegram_chat_id:
             await _send_telegram(user.telegram_chat_id, "✅ Вы успешно записались")
 
-        if user.email:
-            await _send_email(
-                user.email,
-                "Запись подтверждена",
-                f"Вы записаны на {service.name} {booking.start_at:%d.%m.%Y %H:%M}",
-            )
+        await _send_email(
+            user.email,
+            "Запись подтверждена",
+            f"Вы записаны на {service.name} {booking.start_time:%d.%m.%Y %H:%M}",  # (я добавил)
+        )
 
     asyncio.run(_run())
 
@@ -104,7 +103,7 @@ def send_booking_canceled(self, booking_id: int) -> None:
         text = (
             f"❌ Запись отменена\n"
             f"Услуга: {service.name}\n"
-            f"Дата: {booking.start_at:%d.%m.%Y %H:%M}"
+            f"Дата: {booking.start_time:%d.%m.%Y %H:%M}"  # (я добавил)
         )
 
         if user.telegram_chat_id:
@@ -139,7 +138,7 @@ def send_booking_reminder(self, booking_id: int, hours: int) -> None:
             f"⏰ Напоминание\n"
             f"Через {hours} ч. у вас запись:\n"
             f"{service.name}\n"
-            f"{booking.start_at:%d.%m.%Y %H:%M}"
+            f"{booking.start_time:%d.%m.%Y %H:%M}"  # (я добавил)
         )
 
         if user.telegram_chat_id:
@@ -165,8 +164,8 @@ def check_upcoming_bookings() -> None:
             result = await session.execute(
                 select(Booking).where(
                     Booking.status == BookingStatus.ACTIVE.value,
-                    Booking.start_at >= now,
-                    Booking.start_at <= notify_at,
+                    Booking.start_time >= now,  # (я добавил)
+                    Booking.start_time <= notify_at,  # (я добавил)
                 )
             )
 

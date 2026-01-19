@@ -447,3 +447,12 @@
   justify-content: flex-end;
 }
 
+
+/* admin.css — занятый слот */ /* (я добавил) */
+.slot-time--booked {
+    background: #fbeaea;
+    border: 1px solid #e05a5a;
+    color: #b00000;
+    cursor: not-allowed;
+    opacity: 0.7;
+}

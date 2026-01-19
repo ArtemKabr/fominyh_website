@@ -1,8 +1,8 @@
 // frontend/src/pages/Booking/Booking.tsx
 // Назначение: запись на услугу (дата → время → данные → отправка)
 
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import {useEffect, useState} from "react";
+import {useParams} from "react-router-dom";
 import "./booking.css";
 
 type Service = {
@@ -24,7 +24,7 @@ function extractTime(raw: string): string {
 }
 
 export function Booking() {
-    const { slug } = useParams<{ slug: string }>();
+    const {slug} = useParams<{ slug: string }>();
 
     const [service, setService] = useState<Service | null>(null);
     const [loading, setLoading] = useState(true);
@@ -85,7 +85,7 @@ export function Booking() {
         try {
             await fetch("/api/booking", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({
                     service_id: service.id,
                     day: date,
@@ -107,7 +107,7 @@ export function Booking() {
 
         await fetch("/api/booking/reserve", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
                 service_id: service.id,
                 day: date,
@@ -128,10 +128,33 @@ export function Booking() {
         return (
             <div className="booking">
                 <h2>Запись успешно создана</h2>
+
                 <p>Мы свяжемся с вами для подтверждения.</p>
+
+                <p className="home__text home__telegram-info">
+                    Чтобы получать уведомления о подтверждении записи в Telegram,<br/>
+                    напишите нашему боту:{" "}
+                    <span className="home__telegram-link">
+                    <img
+                        src="/icons/telegram.svg"
+                        alt="Telegram"
+                        className="home__telegram-icon"
+                    />
+                    <a
+                        href="https://t.me/EF_Beauty_bot"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}  // (я добавил)
+                    >
+    @EF_Beauty_bot
+</a>
+
+                </span>
+                </p>  {/* (я добавил) */}
             </div>
         );
     }
+
 
     return (
         <div className="booking">
@@ -144,7 +167,7 @@ export function Booking() {
 
             <div className="booking__block">
                 <label>Дата</label>
-                <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                <input type="date" value={date} onChange={(e) => setDate(e.target.value)}/>
             </div>
 
             {slots.length > 0 && (
@@ -176,13 +199,13 @@ export function Booking() {
                     </p>
 
                     <label>ФИО</label>
-                    <input value={name} onChange={(e) => setName(e.target.value)} />
+                    <input value={name} onChange={(e) => setName(e.target.value)}/>
 
                     <label>Телефон</label>
-                    <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <input value={phone} onChange={(e) => setPhone(e.target.value)}/>
 
                     <label>Почта</label>
-                    <input value={reserveEmail} onChange={(e) => setReserveEmail(e.target.value)} />
+                    <input value={reserveEmail} onChange={(e) => setReserveEmail(e.target.value)}/>
 
                     <label>Комментарий</label>
                     <input
@@ -199,10 +222,10 @@ export function Booking() {
             {selectedSlot && (
                 <div className="booking__block">
                     <label>Ваше имя</label>
-                    <input value={name} onChange={(e) => setName(e.target.value)} />
+                    <input value={name} onChange={(e) => setName(e.target.value)}/>
 
                     <label>Телефон</label>
-                    <input value={phone} onChange={(e) => setPhone(e.target.value)} />
+                    <input value={phone} onChange={(e) => setPhone(e.target.value)}/>
 
                     <button
                         className="booking__submit"

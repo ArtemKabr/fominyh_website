@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.booking import Booking, BookingStatus
 from app.models.service import Service
 from app.models.salon_settings import SalonSettings
+# from app.models.calendar_day import CalendarDay
 from app.schemas.booking import AdminSlotBookIn
 from app.schemas.booking import BookingCreate
 from app.core.redis import redis
@@ -66,7 +67,16 @@ async def get_free_slots(
     day: date,
     service_id: int,
 ) -> list[datetime]:
-    """Получить свободные временные слоты на день."""
+    """Получить свободные временные слоты на день."""  # (я добавил)
+
+    from app.models.reserve import Reserve  # (я добавил)
+
+    # проверка резерва дня
+    exists_reserve = await db.scalar(
+        select(Reserve.id).where(Reserve.day == day)
+    )
+    if exists_reserve:
+        return []  # (я добавил)
 
     service = await _get_service(db, service_id)
     salon = await _get_salon_settings(db)
@@ -76,6 +86,7 @@ async def get_free_slots(
     day_start = datetime.combine(day, time(hour=salon.work_start_hour))
     day_end = datetime.combine(day, time(hour=salon.work_end_hour))
 
+    # получаем все занятые интервалы
     res = await db.execute(
         select(Booking).where(
             Booking.service_id == service_id,
@@ -86,21 +97,30 @@ async def get_free_slots(
                     BookingStatus.PENDING.value,
                     BookingStatus.ACTIVE.value,
                 ]
-            ),  # (я добавил)
+            ),
         )
     )
 
-    busy = {
-        b.start_time.replace(second=0, microsecond=0)
-        for b in res.scalars().all()
-    }
+    busy_ranges: list[tuple[datetime, datetime]] = []  # (я добавил)
+    for b in res.scalars().all():
+        start = b.start_time
+        end = start + timedelta(minutes=b.service.duration_minutes)  # (я добавил)
+        busy_ranges.append((start, end))  # (я добавил)
 
     free: list[datetime] = []
     current = day_start
 
+    # перебор сетки слотов с проверкой пересечений
     while current + duration <= day_end:
-        if current not in busy:
+        overlap = False
+        for busy_start, busy_end in busy_ranges:
+            if busy_start < current + duration and busy_end > current:
+                overlap = True
+                break
+
+        if not overlap:
             free.append(current)
+
         current += timedelta(minutes=salon.interval_minutes)
 
     return free

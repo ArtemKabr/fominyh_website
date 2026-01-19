@@ -462,3 +462,29 @@
   height: 100%;
   border: none;
 }
+
+
+.home__telegram-info {
+    margin-top: 16px;
+    font-size: 15px;
+    opacity: 0.9;
+}
+
+.home__telegram-info a {
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+
+.home__telegram-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.home__telegram-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+

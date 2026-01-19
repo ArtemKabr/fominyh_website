@@ -1,4 +1,6 @@
 // frontend/src/components/services/ServiceCard.tsx — карточка услуги
+// Назначение: отображение услуги в списке
+
 import { useNavigate } from "react-router-dom";
 import "./service-card.css";
 
@@ -8,7 +10,7 @@ type Props = {
   slug: string;
   name: string;
   shortDescription: string;
-  duration: number;
+  duration_minutes: number | null; // (я добавил)
   price: number;
   image?: string;
 };
@@ -18,7 +20,7 @@ export function ServiceCard({
   slug,
   name,
   shortDescription,
-  duration,
+  duration_minutes,
   price,
   image,
 }: Props) {
@@ -44,7 +46,11 @@ export function ServiceCard({
         )}
 
         <div className="service-card__meta">
-          <span>{duration} мин</span>
+          <span>
+            {duration_minutes !== null
+              ? `${duration_minutes} мин`
+              : "—"}
+          </span>
           <span>{price} ₽</span>
         </div>
 

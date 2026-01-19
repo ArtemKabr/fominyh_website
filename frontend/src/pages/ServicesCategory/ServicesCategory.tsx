@@ -44,7 +44,7 @@ export function ServicesCategory() {
 
   useEffect(() => {
     setLoading(true);
-    fetch("/data/services.json")
+    fetch("/api/services")
       .then((r) => r.json())
       .then((data) => setServices(data))
       .finally(() => setLoading(false));
@@ -77,7 +77,7 @@ export function ServicesCategory() {
             slug={s.slug}
             name={s.name}
             shortDescription={s.shortDescription}
-            duration={s.duration}
+            duration_minutes={s.duration_minutes}
             price={s.price}
             image={s.image}
           />

@@ -89,6 +89,7 @@ async def admin_get_bookings(
                     "email": b.guest_email,
                 }
             ),
+            "comment": b.guest_comment,  # (я добавил)
         }
         for b, u, s in result.all()
     ]
@@ -138,8 +139,8 @@ async def admin_cancel_booking(
 
 @router.post("/bookings/history/clear")
 async def admin_clear_booking_history(
-    admin: User = Depends(get_admin),  # (я исправил)
-    db: AsyncSession = Depends(get_async_session),
+        admin: User = Depends(get_admin),  # (я исправил)
+        db: AsyncSession = Depends(get_async_session),
 ) -> dict:
     """Очистить историю записей (админ)."""
 
@@ -242,7 +243,7 @@ async def admin_bookings_by_day(
         admin: User = Depends(get_admin),
         db: AsyncSession = Depends(get_async_session),
 ):
-    """Записи на конкретный день."""
+    """Записи на конкретный день."""  # (я добавил)
 
     result = await db.execute(
         select(Booking, User, Service)
@@ -260,7 +261,11 @@ async def admin_bookings_by_day(
             "id": b.id,
             "start_time": b.start_time,
             "status": b.status,
-            "service": s.name,
+            "service": {
+                "id": s.id,
+                "name": s.name,
+                "price": s.price,
+            },  # (я добавил)
             "user": (
                 {
                     "name": u.name,
@@ -273,6 +278,7 @@ async def admin_bookings_by_day(
                     "email": b.guest_email,
                 }
             ),
+            "comment": b.admin_comment,  # (я добавил)
         }
         for b, u, s in result.all()
     ]
@@ -312,8 +318,8 @@ async def admin_slot_book(
 
 @router.get("/services")
 async def admin_services(
-    admin: User = Depends(get_admin),
-    db: AsyncSession = Depends(get_async_session),
+        admin: User = Depends(get_admin),
+        db: AsyncSession = Depends(get_async_session),
 ):
     """Список услуг."""  # (я добавил)
     res = await db.execute(select(Service).order_by(Service.id))
@@ -330,9 +336,9 @@ async def admin_services(
 
 @router.post("/services")
 async def admin_create_service(
-    payload: dict,
-    admin: User = Depends(get_admin),
-    db: AsyncSession = Depends(get_async_session),
+        payload: dict,
+        admin: User = Depends(get_admin),
+        db: AsyncSession = Depends(get_async_session),
 ):
     """Создать услугу."""  # (я добавил)
     service = Service(
@@ -348,10 +354,10 @@ async def admin_create_service(
 
 @router.put("/services/{service_id}")
 async def admin_update_service(
-    service_id: int,
-    payload: dict,
-    admin: User = Depends(get_admin),
-    db: AsyncSession = Depends(get_async_session),
+        service_id: int,
+        payload: dict,
+        admin: User = Depends(get_admin),
+        db: AsyncSession = Depends(get_async_session),
 ):
     """Редактировать услугу."""  # (я добавил)
     service = await db.get(Service, service_id)
@@ -368,9 +374,9 @@ async def admin_update_service(
 
 @router.delete("/services/{service_id}")
 async def admin_delete_service(
-    service_id: int,
-    admin: User = Depends(get_admin),
-    db: AsyncSession = Depends(get_async_session),
+        service_id: int,
+        admin: User = Depends(get_admin),
+        db: AsyncSession = Depends(get_async_session),
 ):
     """Удалить услугу."""  # (я добавил)
     await db.execute(delete(Service).where(Service.id == service_id))
@@ -385,8 +391,8 @@ async def admin_delete_service(
 
 @router.get("/users")
 async def admin_users(
-    admin: User = Depends(get_admin),
-    db: AsyncSession = Depends(get_async_session),
+        admin: User = Depends(get_admin),
+        db: AsyncSession = Depends(get_async_session),
 ):
     """Список пользователей."""  # (я добавил)
     res = await db.execute(select(User).order_by(User.id))
@@ -409,8 +415,8 @@ async def admin_users(
 
 @router.get("/stats")
 async def admin_stats(
-    admin: User = Depends(get_admin),
-    db: AsyncSession = Depends(get_async_session),
+        admin: User = Depends(get_admin),
+        db: AsyncSession = Depends(get_async_session),
 ):
     """Статистика записей."""  # (я добавил)
 
@@ -442,8 +448,8 @@ async def admin_stats(
 
 @router.get("/reserve")
 async def admin_reserve_list(
-    admin: User = Depends(get_admin),
-    db: AsyncSession = Depends(get_async_session),
+        admin: User = Depends(get_admin),
+        db: AsyncSession = Depends(get_async_session),
 ):
     """Список резерва."""  # (я добавил)
 
@@ -468,9 +474,9 @@ async def admin_reserve_list(
 
 @router.delete("/reserve/{reserve_id}")
 async def admin_reserve_delete(
-    reserve_id: int,
-    admin: User = Depends(get_admin),
-    db: AsyncSession = Depends(get_async_session),
+        reserve_id: int,
+        admin: User = Depends(get_admin),
+        db: AsyncSession = Depends(get_async_session),
 ):
     """Удалить резерв."""  # (я добавил)
 

@@ -26,11 +26,13 @@ class BookingCreate(BaseModel):
     phone: str = Field(min_length=5, max_length=20)
     email: str | None = Field(default=None, max_length=255)
 
-    start_time: datetime | None = None  # (я добавил)
+    comment: str | None = None  # (я добавил)
+
+    start_time: datetime | None = None
 
     @model_validator(mode="after")
     def build_start_time(self):
-        """Собираем start_time из day + time."""  # (я добавил)
+        """Собираем start_time из day + time."""
         self.start_time = datetime.fromisoformat(
             f"{self.day} {self.time}"
         )

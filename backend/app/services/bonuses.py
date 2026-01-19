@@ -12,7 +12,7 @@ from app.models.service import Service
 
 
 async def apply_bonuses_for_completed_bookings(
-    db: AsyncSession,
+        db: AsyncSession,
 ) -> int:
     """
     Начислить бонусы за завершённые записи.
@@ -25,8 +25,9 @@ async def apply_bonuses_for_completed_bookings(
         .join(User, User.id == Booking.user_id)
         .where(
             Booking.status == BookingStatus.ACTIVE.value,
-            Booking.start_at < datetime.utcnow(),
+            Booking.start_time < datetime.utcnow(),  # (я добавил)
         )
+
     )
 
     processed = 0
